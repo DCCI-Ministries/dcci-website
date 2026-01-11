@@ -8,7 +8,7 @@ Allow: /welcome/
 Allow: /articles/
 Allow: /articles/*
 Allow: /privacy/
-Allow: /terms-of-use/
+Allow: /terms/
 Allow: /disclaimer/
 Allow: /accessibility/
 Allow: /contact/
