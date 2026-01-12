@@ -89,7 +89,7 @@ export class ScrollService {
         foundScrolled = true;
       }
     });
-    
+
     // Only update if state changed
     if (foundScrolled !== this.currentState) {
       this.currentState = foundScrolled;
