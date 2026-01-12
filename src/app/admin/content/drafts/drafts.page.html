@@ -85,43 +85,42 @@
       </div>
 
       <div *ngFor="let draft of filteredDrafts" class="article-card">
-        <div class="article-header">
-          <h3>{{ draft.title }}</h3>
-          <div class="article-meta">
-            <span class="date" *ngIf="draft.updatedAt">
-              Updated: {{ getDate(draft.updatedAt) | date:'short' }}
-            </span>
-            <span class="date" *ngIf="!draft.updatedAt">
-              {{ getDate(draft.createdAt) | date:'short' }}
-            </span>
+        <div class="article-thumbnail" *ngIf="getThumbnailUrl(draft)">
+          <img [src]="getThumbnailUrl(draft)" [alt]="draft.title">
+        </div>
+        <div class="article-info">
+          <div class="article-header">
+            <h3 class="article-title">{{ draft.title }}</h3>
+            <div class="article-meta">
+              <span class="date" *ngIf="draft.updatedAt">
+                Updated: {{ getDate(draft.updatedAt) | date:'short' }}
+              </span>
+              <span class="date" *ngIf="!draft.updatedAt">
+                {{ getDate(draft.createdAt) | date:'short' }}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <p class="article-excerpt" *ngIf="draft.excerpt">{{ draft.excerpt }}</p>
+          <p class="article-excerpt" *ngIf="draft.excerpt">{{ draft.excerpt }}</p>
 
-        <div class="article-tags" *ngIf="draft.tags && draft.tags.length > 0">
-          <ion-chip *ngFor="let tag of draft.tags" color="primary" size="small">
-            <ion-label>{{ tag }}</ion-label>
-          </ion-chip>
-        </div>
-
-        <div class="article-actions">
-          <ion-button fill="clear" size="small" (click)="viewDraft(draft)">
-            <ion-icon name="eye-outline" slot="start"></ion-icon>
-            View
-          </ion-button>
-          <ion-button fill="clear" size="small" (click)="editDraft(draft)">
-            <ion-icon name="pencil-outline" slot="start"></ion-icon>
-            Edit
-          </ion-button>
-          <ion-button fill="clear" size="small" color="success" (click)="publishDraft(draft)">
-            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-            Publish
-          </ion-button>
-          <ion-button fill="clear" size="small" color="danger" (click)="deleteDraft(draft)">
-            <ion-icon name="trash-outline" slot="start"></ion-icon>
-            Delete
-          </ion-button>
+          <div class="article-actions">
+            <ion-button fill="clear" size="small" (click)="viewDraft(draft); $event.stopPropagation()">
+              <ion-icon name="eye-outline" slot="start"></ion-icon>
+              View
+            </ion-button>
+            <ion-button fill="clear" size="small" (click)="editDraft(draft); $event.stopPropagation()">
+              <ion-icon name="pencil-outline" slot="start"></ion-icon>
+              Edit
+            </ion-button>
+            <ion-button fill="clear" size="small" color="success" (click)="publishDraft(draft); $event.stopPropagation()">
+              <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+              Publish
+            </ion-button>
+            <ion-button fill="clear" size="small" color="danger" (click)="deleteDraft(draft); $event.stopPropagation()">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              Delete
+            </ion-button>
+          </div>
         </div>
       </div>
     </div>

@@ -85,43 +85,42 @@
       </div>
 
       <div *ngFor="let article of filteredPublished" class="article-card">
-        <div class="article-header">
-          <h3>{{ article.title }}</h3>
-          <div class="article-meta">
-            <span class="date" *ngIf="article.publishedAt">
-              Published: {{ getDate(article.publishedAt) | date:'short' }}
-            </span>
-            <span class="date" *ngIf="!article.publishedAt">
-              {{ getDate(article.createdAt) | date:'short' }}
-            </span>
+        <div class="article-thumbnail" *ngIf="getThumbnailUrl(article)">
+          <img [src]="getThumbnailUrl(article)" [alt]="article.title">
+        </div>
+        <div class="article-info">
+          <div class="article-header">
+            <h3 class="article-title">{{ article.title }}</h3>
+            <div class="article-meta">
+              <span class="date" *ngIf="article.publishedAt">
+                {{ getDate(article.publishedAt) | date:'short' }}
+              </span>
+              <span class="date" *ngIf="!article.publishedAt">
+                {{ getDate(article.createdAt) | date:'short' }}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <p class="article-excerpt" *ngIf="article.excerpt">{{ article.excerpt }}</p>
+          <p class="article-excerpt" *ngIf="article.excerpt">{{ article.excerpt }}</p>
 
-        <div class="article-tags" *ngIf="article.tags && article.tags.length > 0">
-          <ion-chip *ngFor="let tag of article.tags" color="primary" size="small">
-            <ion-label>{{ tag }}</ion-label>
-          </ion-chip>
-        </div>
-
-        <div class="article-actions">
-          <ion-button fill="clear" size="small" (click)="viewPublished(article)">
-            <ion-icon name="eye-outline" slot="start"></ion-icon>
-            View
-          </ion-button>
-          <ion-button fill="clear" size="small" (click)="editPublished(article)">
-            <ion-icon name="pencil-outline" slot="start"></ion-icon>
-            Edit
-          </ion-button>
-          <ion-button fill="clear" size="small" color="warning" (click)="unpublishContent(article)">
-            <ion-icon name="archive-outline" slot="start"></ion-icon>
-            Unpublish
-          </ion-button>
-          <ion-button fill="clear" size="small" color="danger" (click)="deletePublished(article)">
-            <ion-icon name="trash-outline" slot="start"></ion-icon>
-            Delete
-          </ion-button>
+          <div class="article-actions">
+            <ion-button fill="clear" size="small" (click)="viewPublished(article); $event.stopPropagation()">
+              <ion-icon name="eye-outline" slot="start"></ion-icon>
+              View
+            </ion-button>
+            <ion-button fill="clear" size="small" (click)="editPublished(article); $event.stopPropagation()">
+              <ion-icon name="pencil-outline" slot="start"></ion-icon>
+              Edit
+            </ion-button>
+            <ion-button fill="clear" size="small" color="warning" (click)="unpublishContent(article); $event.stopPropagation()">
+              <ion-icon name="archive-outline" slot="start"></ion-icon>
+              Unpublish
+            </ion-button>
+            <ion-button fill="clear" size="small" color="danger" (click)="deletePublished(article); $event.stopPropagation()">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              Delete
+            </ion-button>
+          </div>
         </div>
       </div>
     </div>

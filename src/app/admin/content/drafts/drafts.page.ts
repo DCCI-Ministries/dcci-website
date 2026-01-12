@@ -317,6 +317,11 @@ export class DraftsPage implements OnInit, OnDestroy {
     return new Date(date);
   }
 
+  getThumbnailUrl(article: Content): string | null {
+    const data = article as any;
+    return data.thumbnailUrl || article.featuredImage || null;
+  }
+
   private async showToast(message: string, color: 'success' | 'danger' = 'success') {
     const toast = await this.toastController.create({
       message,
