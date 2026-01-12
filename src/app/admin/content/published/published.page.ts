@@ -16,7 +16,6 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
-  IonChip,
   IonCheckbox,
   LoadingController,
   ToastController,
@@ -47,7 +46,6 @@ import { firstValueFrom } from 'rxjs';
     IonSelect,
     IonSelectOption,
     IonSpinner,
-    IonChip,
     IonCheckbox,
     CommonModule,
     FormsModule

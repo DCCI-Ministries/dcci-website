@@ -17,7 +17,6 @@
     "noEmit": true
   },
   "include": [
-    ".astro/types.d.ts",
     "**/*"
   ],
   "exclude": [
