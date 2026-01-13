@@ -57,8 +57,8 @@ const jsonLd = generateJSONLD(seoData);
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
-		{@html metaTags}
-		{@html jsonLd}
+		<Fragment set:html={metaTags} />
+		<Fragment set:html={jsonLd} />
 	</head>
 	<body>
 		<main>
@@ -91,37 +91,37 @@ const jsonLd = generateJSONLD(seoData);
 		margin: 0 auto;
 		padding: 2rem;
 	}
-	
+
 	article header {
 		margin-bottom: 2rem;
 	}
-	
+
 	article h1 {
 		margin-bottom: 1rem;
 	}
-	
+
 	.excerpt {
 		font-size: 1.2em;
 		font-style: italic;
 		margin-bottom: 2rem;
 		color: #666;
 	}
-	
+
 	.content {
 		line-height: 1.6;
 	}
-	
+
 	.content :global(h1),
 	.content :global(h2),
 	.content :global(h3) {
 		margin-top: 2rem;
 		margin-bottom: 1rem;
 	}
-	
+
 	.content :global(p) {
 		margin-bottom: 1rem;
 	}
-	
+
 	.content :global(img) {
 		max-width: 100%;
 		height: auto;

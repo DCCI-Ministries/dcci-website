@@ -36,3 +36,47 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 @import 'quill/dist/quill.snow.css';
+
+/**
+ * Enable text selection globally
+ * Ionic disables text selection by default, but we want content to be selectable
+ */
+
+/* Enable text selection for content areas */
+ion-content,
+ion-card,
+ion-item,
+ion-label,
+p,
+h1, h2, h3, h4, h5, h6,
+span,
+div:not([role="button"]):not([tabindex]),
+article,
+section,
+main,
+li,
+td,
+th {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Keep text selection disabled for interactive elements */
+ion-button,
+ion-icon,
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex],
+.youtube-filter-label,
+.filter-label {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

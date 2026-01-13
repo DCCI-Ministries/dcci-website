@@ -44,6 +44,23 @@ yarn-error.log
 /functions/lib
 /functions/.env
 
+# Astro public-site environment files
+/public-site/.env
+/public-site/.env.*
+
+# Firebase Service Account Keys (NEVER commit these!)
+**/service-account-key.json
+**/*service-account*.json
+**/*firebase-admin*.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!angular.json
+!firebase.json
+!ionic.config.json
+!capacitor.config.ts
+
 # IDEs and editors
 .idea/
 .project
