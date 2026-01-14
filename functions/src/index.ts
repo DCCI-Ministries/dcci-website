@@ -266,13 +266,12 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           to: recipientEmail,
           replyTo: `${sanitizedName} <${sanitizedEmail}>`,
           subject: `Contact Form: ${sanitizedSubject}`,
-          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nNewsletter: ${sanitizedNewsletter ? 'Yes' : 'No'}\nIP: ${clientIP}\n\n${sanitizedMessage}`,
+          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nIP: ${clientIP}\n\n${sanitizedMessage}`,
           html: `
             <h3>New Contact Form Submission</h3>
             <p><b>Name:</b> ${escapeHtmlForEmail(sanitizedName)}</p>
             <p><b>Email:</b> ${escapeHtmlForEmail(sanitizedEmail)}</p>
             <p><b>Subject:</b> ${escapeHtmlForEmail(sanitizedSubject)}</p>
-            <p><b>Newsletter Subscription:</b> ${sanitizedNewsletter ? 'Yes' : 'No'}</p>
             <p><b>IP Address:</b> ${escapeHtmlForEmail(clientIP)}</p>
             <hr>
             <p><b>Message:</b></p>
@@ -550,22 +549,39 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
       const subscriberRef = await db.collection('subscribers').add(subscriberData);
       console.log('Newsletter subscription added with ID:', subscriberRef.id);
 
-      // Send email notification to admin
-      await tx.sendMail({
-        from: `"DCCI Ministries Website" <${user}>`,
-        to,
-        subject: `New Newsletter Subscription: ${sanitizedName}`,
-        text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nIP: ${clientIP}\n\nThis person subscribed to the newsletter through the standalone signup form.`,
-        html: `
-          <h3>New Newsletter Subscription</h3>
-          <p><b>Name:</b> ${escapeHtmlForEmail(sanitizedName)}</p>
-          <p><b>Email:</b> ${escapeHtmlForEmail(sanitizedEmail)}</p>
-          <p><b>IP Address:</b> ${escapeHtmlForEmail(clientIP)}</p>
-          <hr>
-          <p><small>This subscription was made through the standalone newsletter signup form.</small></p>
-          <p><small>Subscriber ID: ${subscriberRef.id}</small></p>
-        `
-      });
+      // Send welcome email to subscriber (no admin notification)
+      try {
+        await tx.sendMail({
+          from: `"DCCI Ministries" <${user}>`,
+          to: sanitizedEmail,
+          replyTo: user,
+          subject: `Welcome to DCCI Ministries Newsletter`,
+          text: `Thank you for subscribing to the DCCI Ministries newsletter, ${sanitizedName}!
+
+We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.
+
+If you ever wish to unsubscribe, you can do so at any time by contacting us at ${user} or by replying to this email.
+
+Thank you for your interest in DCCI Ministries.
+
+In Christ,
+DCCI Ministries Team`,
+          html: `
+            <h2>Welcome to DCCI Ministries Newsletter</h2>
+            <p>Thank you for subscribing to the DCCI Ministries newsletter, <b>${escapeHtmlForEmail(sanitizedName)}</b>!</p>
+            <p>We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.</p>
+            <hr>
+            <p><strong>Unsubscribe:</strong> If you ever wish to unsubscribe, you can do so at any time by contacting us at <a href="mailto:${user}">${user}</a> or by replying to this email.</p>
+            <hr>
+            <p>Thank you for your interest in DCCI Ministries.</p>
+            <p>In Christ,<br>DCCI Ministries Team</p>
+          `
+        });
+        console.log('Welcome email sent to subscriber:', sanitizedEmail);
+      } catch (emailError: any) {
+        console.error('Error sending welcome email to subscriber:', emailError.message);
+        // Don't fail the subscription if welcome email fails
+      }
 
       res.status(200).json({
         success: true,
@@ -2215,7 +2231,7 @@ export const updateEmailVerified = functions.https.onRequest(async (req, res) =>
 
 /**
  * Firestore trigger: Automatically rebuild and redeploy Astro site when articles are published/updated
- * 
+ *
  * Triggers on writes to /content/{articleId}
  * Only rebuilds if:
  * - status === 'published'
@@ -2269,7 +2285,7 @@ export const onArticleUpdate = functions.firestore
       // Option 2: Direct Firebase Hosting deployment (fallback)
       console.log('GitHub Actions not configured. Attempting direct Firebase Hosting deployment...');
       await triggerFirebaseHostingDeploy(articleId);
-      
+
       return null;
     } catch (error) {
       console.error(`Error triggering rebuild for article ${articleId}:`, error);
@@ -2298,7 +2314,7 @@ async function triggerGitHubActions(
 
     // Option A: Use repository_dispatch (requires workflow_dispatch in workflow)
     const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/dispatches`;
-    
+
     const payload = JSON.stringify({
       event_type: 'rebuild-astro',
       client_payload: {
@@ -2357,12 +2373,12 @@ async function triggerFirebaseHostingDeploy(articleId: string): Promise<void> {
   // However, Firebase Hosting doesn't have a direct API for this.
   // Instead, we'll use the Firebase CLI via a Cloud Build trigger or
   // create an HTTP-triggered function that can be called with proper auth.
-  
+
   // For now, log that we need GitHub Actions or manual deployment
   console.warn('Direct Firebase Hosting deployment not implemented. Please configure GitHub Actions.');
   console.warn(`Article ${articleId} was published but deployment was not triggered.`);
   console.warn('Please manually rebuild and deploy, or configure GitHub Actions workflow.');
-  
+
   // Alternative: You could create an HTTP Cloud Function that runs the build
   // and deploy commands, but this requires more setup and security considerations.
   throw new Error('Firebase Hosting direct deployment not configured. Use GitHub Actions instead.');
