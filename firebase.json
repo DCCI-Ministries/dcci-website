@@ -21,11 +21,6 @@
     ],
     "redirects": [
       {
-        "source": "/welcome",
-        "destination": "/welcome/",
-        "type": 301
-      },
-      {
         "source": "/articles",
         "destination": "/articles/",
         "type": 301
@@ -64,15 +59,7 @@
     "rewrites": [
       {
         "source": "/",
-        "destination": "/welcome/index.html"
-      },
-      {
-        "source": "/welcome",
-        "destination": "/welcome/index.html"
-      },
-      {
-        "source": "/welcome/",
-        "destination": "/welcome/index.html"
+        "destination": "/index.html"
       },
       {
         "source": "/articles",
