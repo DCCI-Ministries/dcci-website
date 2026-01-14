@@ -1,0 +1,22 @@
+.unsubscribe-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.unsubscribe-form {
+  margin-top: 1.5rem;
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+ion-card-content {
+  p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+}

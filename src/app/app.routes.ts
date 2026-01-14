@@ -158,5 +158,10 @@ export const routes: Routes = [
     loadComponent: () => import('./accessibility/accessibility.page').then( m => m.AccessibilityPage),
     canActivate: [maintenanceGuard]
   },
+  {
+    path: 'unsubscribe',
+    loadComponent: () => import('./unsubscribe/unsubscribe.page').then( m => m.UnsubscribePage),
+    canActivate: [maintenanceGuard]
+  },
 
 ];

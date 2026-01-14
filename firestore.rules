@@ -1,31 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Only allow writes to contacts collection from Firebase Functions
+    // Contacts collection - contact form submissions
     match /contacts/{document} {
-      // Allow create only (no update, no delete)
+      // Allow anyone to create (for public contact form submissions)
       // Block writes if site is in read-only mode
-      allow create: if (request.auth != null ||
-        (resource == null && request.resource != null)) && !siteIsReadOnly();
+      allow create: if !siteIsReadOnly();
 
-      // Allow admins to read contact submissions (for dashboard activity)
+      // Only admins can read contact submissions (for dashboard activity)
+      // No public reads - this data is private
       allow read: if isAdminUser();
-      
-      // Deny update and delete
+
+      // Deny update and delete (immutable once created)
       allow update, delete: if false;
     }
 
-    // Allow writes to subscribers collection from Firebase Functions
+    // Subscribers collection - newsletter subscriptions
     match /subscribers/{document} {
-      // Allow create and update (for newsletter management)
+      // Allow anyone to create (for public newsletter signup)
+      // Allow updates (for status changes, etc.)
       // Block writes if site is in read-only mode
-      allow create, update: if (request.auth != null ||
-        (resource == null && request.resource != null)) && !siteIsReadOnly();
+      allow create, update: if !siteIsReadOnly();
 
-      // Allow admins to read subscribers (for dashboard activity)
+      // Only admins can read subscribers (for dashboard activity)
+      // No public reads - this data is private
       allow read: if isAdminUser();
-      
-      // Deny delete
+
+      // Delete is handled by Cloud Functions (Admin SDK bypasses rules)
+      // Deny client-side deletes for security
       allow delete: if false;
     }
 
@@ -147,10 +149,10 @@ service cloud.firestore {
     match /settings/{settingId} {
       // Allow admins to read settings
       allow read: if isAdminUser();
-      
+
       // Allow admins to create and update settings (unless read-only mode for non-admins)
       allow create, update: if isAdminUser() && !siteIsReadOnly();
-      
+
       // Deny delete operations
       allow delete: if false;
     }
@@ -160,13 +162,13 @@ service cloud.firestore {
       // Allow all users to read site settings (needed for maintenance mode check)
       // This must work even when document doesn't exist yet
       allow read: if true;
-      
+
       // Only full admins can create/update emergency settings
       // Must be full admin (not moderator) - these are critical settings
       // Admins can always update (even in read-only mode, they need to turn it off)
       // Note: We don't check siteIsReadOnly() here to allow admins to disable read-only mode
       allow create, update: if isFullAdmin();
-      
+
       // Deny delete operations
       allow delete: if false;
     }

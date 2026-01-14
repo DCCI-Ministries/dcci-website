@@ -114,4 +114,30 @@ export class ContactService {
       throw error;
     }
   }
+
+  async unsubscribeFromNewsletter(email: string, token?: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.post(
+        environment.firebaseFunctionsUrl + '/unsubscribeFromNewsletter',
+        { email, token },
+        {
+          headers: new HttpHeaders({
+            'Content-Type': 'application/json'
+          })
+        }
+      ));
+
+      if (!response) {
+        throw new Error('No response from server');
+      }
+
+      console.log('Unsubscribe successful:', response);
+    } catch (error: any) {
+      console.error('Error unsubscribing from newsletter:', error);
+      if (error.error) {
+        throw error;
+      }
+      throw error;
+    }
+  }
 }

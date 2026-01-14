@@ -228,14 +228,6 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
 
       // If they want newsletter updates, add to subscribers collection
       if (sanitizedNewsletter) {
-        const subscriberData = {
-          email: sanitizedEmail,
-          name: sanitizedName,
-          subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
-          source: 'contact_form',
-          status: 'active'
-        };
-
         // Check if email already exists in subscribers
         const existingSubscriber = await db.collection('subscribers')
           .where('email', '==', sanitizedEmail)
@@ -243,6 +235,19 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           .get();
 
         if (existingSubscriber.empty) {
+          // Generate unique unsubscribe token
+          const crypto = require('crypto');
+          const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+
+          const subscriberData = {
+            email: sanitizedEmail,
+            name: sanitizedName,
+            subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: 'contact_form',
+            status: 'active',
+            unsubscribeToken: unsubscribeToken
+          };
+
           await db.collection('subscribers').add(subscriberData);
           console.log('Added to newsletter subscribers:', sanitizedEmail);
         } else {
@@ -535,6 +540,10 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
         return;
       }
 
+      // Generate unique unsubscribe token
+      const crypto = require('crypto');
+      const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+
       // Add to subscribers collection
       const subscriberData = {
         email: sanitizedEmail,
@@ -543,11 +552,15 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
         source: 'newsletter_signup',
         status: 'active',
         ipAddress: clientIP,
-        userAgent: req.get('User-Agent') || 'Unknown'
+        userAgent: req.get('User-Agent') || 'Unknown',
+        unsubscribeToken: unsubscribeToken
       };
-
       const subscriberRef = await db.collection('subscribers').add(subscriberData);
       console.log('Newsletter subscription added with ID:', subscriberRef.id);
+
+      // Generate unsubscribe URL (works with both /unsubscribe and /app/unsubscribe via Firebase rewrites)
+      const siteUrl = functions.config().site?.url || 'https://dcciministries.com';
+      const unsubscribeUrl = `${siteUrl}/unsubscribe?token=${unsubscribeToken}&email=${encodeURIComponent(sanitizedEmail)}`;
 
       // Send welcome email to subscriber (no admin notification)
       try {
@@ -560,7 +573,8 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
 
 We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.
 
-If you ever wish to unsubscribe, you can do so at any time by contacting us at ${user} or by replying to this email.
+If you ever wish to unsubscribe, you can do so at any time by visiting:
+${unsubscribeUrl}
 
 Thank you for your interest in DCCI Ministries.
 
@@ -571,7 +585,7 @@ DCCI Ministries Team`,
             <p>Thank you for subscribing to the DCCI Ministries newsletter, <b>${escapeHtmlForEmail(sanitizedName)}</b>!</p>
             <p>We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.</p>
             <hr>
-            <p><strong>Unsubscribe:</strong> If you ever wish to unsubscribe, you can do so at any time by contacting us at <a href="mailto:${user}">${user}</a> or by replying to this email.</p>
+            <p><strong>Unsubscribe:</strong> If you ever wish to unsubscribe, you can do so at any time by <a href="${unsubscribeUrl}">clicking here</a>.</p>
             <hr>
             <p>Thank you for your interest in DCCI Ministries.</p>
             <p>In Christ,<br>DCCI Ministries Team</p>
@@ -591,6 +605,73 @@ DCCI Ministries Team`,
     } catch (e) {
       console.error('Newsletter subscription error:', e);
       res.status(500).json({ error: "Failed to process newsletter subscription" });
+    }
+  });
+});
+
+// Newsletter unsubscribe endpoint
+export const unsubscribeFromNewsletter = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== "POST" && req.method !== "GET") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    // Support both GET (for direct link clicks) and POST (for form submission)
+    const email = req.method === "GET" ? req.query.email : req.body?.email;
+    const token = req.method === "GET" ? req.query.token : req.body?.token;
+
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({
+        error: "Email required",
+        message: "Please provide your email address to unsubscribe."
+      });
+      return;
+    }
+
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    try {
+      // Find subscriber by email
+      const subscribersSnapshot = await db.collection('subscribers')
+        .where('email', '==', sanitizedEmail)
+        .limit(1)
+        .get();
+
+      if (subscribersSnapshot.empty) {
+        res.status(404).json({
+          error: "Not found",
+          message: "This email address is not subscribed to our newsletter."
+        });
+        return;
+      }
+
+      const subscriberDoc = subscribersSnapshot.docs[0];
+      const subscriberData = subscriberDoc.data();
+
+      // If token is provided, verify it matches
+      if (token && subscriberData.unsubscribeToken !== token) {
+        res.status(403).json({
+          error: "Invalid token",
+          message: "The unsubscribe link is invalid or has expired. Please enter your email address to unsubscribe."
+        });
+        return;
+      }
+
+      // Delete the subscriber
+      await subscriberDoc.ref.delete();
+      console.log('Subscriber unsubscribed:', sanitizedEmail);
+
+      res.status(200).json({
+        success: true,
+        message: "You have been successfully unsubscribed from the DCCI Ministries newsletter."
+      });
+    } catch (e) {
+      console.error('Unsubscribe error:', e);
+      res.status(500).json({
+        error: "Failed to process unsubscribe request",
+        message: "An error occurred while processing your unsubscribe request. Please try again later."
+      });
     }
   });
 });
