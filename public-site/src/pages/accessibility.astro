@@ -1,4 +1,5 @@
 ---
+import SiteLayout from '../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
 
 const canonicalUrl = absoluteUrl('/accessibility/');
@@ -14,17 +15,13 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<Fragment set:html={metaTags} />
-		<Fragment set:html={jsonLd} />
-	</head>
-	<body>
-		<main>
+<SiteLayout
+  title="Accessibility Statement - DCCI Ministries"
+  description="Accessibility statement for DCCI Ministries. Our commitment to making our website accessible to all visitors."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
 			<h1>ACCESSIBILITY STATEMENT</h1>
 
 			<div class="organization-info">
@@ -55,59 +52,29 @@ const jsonLd = generateJSONLD(seoData);
 			<section>
 				<h2>ONGOING COMMITMENT</h2>
 				<p>Accessibility is an ongoing effort. We view it as part of responsible stewardship and service to others.</p>
-			</section>
-		</main>
-	</body>
-</html>
+    </section>
 
-<style>
-	main {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 2rem;
-	}
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
 
-	h1 {
-		font-size: 2rem;
-		margin-bottom: 1rem;
-	}
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
 
-	h2 {
-		font-size: 1.5rem;
-		margin-top: 2rem;
-		margin-bottom: 1rem;
-	}
+      .intro-text {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
 
-	.organization-info {
-		margin-bottom: 2rem;
-	}
-
-	.last-updated {
-		font-style: italic;
-	}
-
-	.intro-text {
-		margin-bottom: 2rem;
-		font-size: 1.1rem;
-	}
-
-	section {
-		margin-bottom: 2rem;
-	}
-
-	.contact-info-box {
-		background: #f5f5f5;
-		padding: 1rem;
-		border-radius: 4px;
-		margin: 1rem 0;
-	}
-
-	a {
-		color: #0066cc;
-		text-decoration: underline;
-	}
-
-	a:hover {
-		text-decoration: none;
-	}
-</style>
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+    </style>
+  </main>
+</SiteLayout>

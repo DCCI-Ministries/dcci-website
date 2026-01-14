@@ -1,4 +1,5 @@
 ---
+import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getPublishedArticles } from '../../lib/firestore';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../../lib/seo';
 
@@ -18,37 +19,108 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<Fragment set:html={metaTags} />
-		<Fragment set:html={jsonLd} />
-	</head>
-	<body>
-		<main>
-			<h1>Articles</h1>
-			{articles.length > 0 ? (
-				<ul>
-					{articles.map((article) => (
-						<li>
-							<a href={`/articles/${article.slug}/`}>
-								<h2>{article.title}</h2>
-							</a>
-							{article.excerpt && <p>{article.excerpt}</p>}
-							{article.publishedAt && (
-								<time datetime={article.publishedAt.toISOString()}>
-									{article.publishedAt.toLocaleDateString()}
-								</time>
-							)}
-						</li>
-					))}
-				</ul>
-			) : (
-				<p>No articles published yet.</p>
-			)}
-		</main>
-	</body>
-</html>
+<SiteLayout
+  title="Articles - DCCI Ministries"
+  description="Read articles and insights from DCCI Ministries on Christianity, Islam, and interfaith dialogue."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <h1>Articles</h1>
+    <p class="intro">Browse our latest articles and insights. For the full interactive experience, <a href="/app/articles">use our app</a>.</p>
+    
+    {articles.length > 0 ? (
+      <ul class="article-list">
+        {articles.map((article) => (
+          <li class="article-item">
+            <article>
+              <h2><a href={`/articles/${article.slug}/`}>{article.title}</a></h2>
+              {article.excerpt && <p class="excerpt">{article.excerpt}</p>}
+              <div class="meta">
+                {article.publishedAt && (
+                  <time datetime={article.publishedAt.toISOString()}>
+                    {article.publishedAt.toLocaleDateString()}
+                  </time>
+                )}
+                <a href={`/app/article/${article.slug}`} class="app-link">Open in App</a>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>No articles published yet.</p>
+    )}
+    <style>
+      .intro {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        color: #666;
+      }
+
+      .intro a {
+        color: #0066cc;
+        text-decoration: underline;
+      }
+
+      .article-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .article-item {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .article-item:last-child {
+        border-bottom: none;
+      }
+
+      .article-item h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+      }
+
+      .article-item h2 a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+
+      .article-item h2 a:hover {
+        text-decoration: underline;
+      }
+
+      .excerpt {
+        color: #666;
+        margin: 0.5rem 0 1rem 0;
+        line-height: 1.6;
+      }
+
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #888;
+      }
+
+      .meta time {
+        font-style: italic;
+      }
+
+      .app-link {
+        color: #0066cc;
+        text-decoration: underline;
+        font-weight: 500;
+      }
+
+      .app-link:hover {
+        text-decoration: none;
+      }
+    </style>
+  </main>
+</SiteLayout>

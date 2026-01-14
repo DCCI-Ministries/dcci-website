@@ -1,11 +1,12 @@
 ---
+import SiteLayout from '../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
 
 const canonicalUrl = absoluteUrl('/privacy/');
 
 const seoData = {
   title: 'Privacy Policy - DCCI Ministries',
-  description: 'Privacy Policy for DCCI Ministries. Learn how we collect, use, and protect your personal information.',
+  description: 'Privacy Policy for DCCI Ministries. Learn how we collect, use, and protect your personal information. We respect your privacy and do not sell personal data.',
   canonicalUrl,
   type: 'website' as const
 };
@@ -14,23 +15,47 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<Fragment set:html={metaTags} />
-		<Fragment set:html={jsonLd} />
-	</head>
-	<body>
-		<main>
-			<h1>PRIVACY POLICY</h1>
+<SiteLayout
+  title="Privacy Policy - DCCI Ministries"
+  description="Privacy Policy for DCCI Ministries. Learn how we collect, use, and protect your personal information. We respect your privacy and do not sell personal data."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Site</h2>
+      <p>For the full interactive experience and to access all features, visit our interactive site:</p>
+      <a href="/app/welcome" class="cta-button">Open Interactive Site</a>
+    </div>
 
-			<div class="organization-info">
-				<p><strong>DCCI Ministries</strong></p>
-				<p class="last-updated">Last updated: January 2026</p>
-			</div>
+    <h1>Privacy Policy</h1>
+
+    <div class="organization-info">
+      <p><strong>DCCI Ministries</strong></p>
+      <p class="last-updated">Last updated: January 2026</p>
+    </div>
+
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      .data-category {
+        margin: 1.5rem 0;
+      }
+    </style>
 
 			<section>
 				<h2>1. WHO WE ARE</h2>
@@ -179,72 +204,6 @@ const jsonLd = generateJSONLD(seoData);
 							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
 					</ul>
 				</div>
-			</section>
-		</main>
-	</body>
-</html>
-
-<style>
-	main {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 2rem;
-	}
-
-	h1 {
-		font-size: 2rem;
-		margin-bottom: 1rem;
-	}
-
-	h2 {
-		font-size: 1.5rem;
-		margin-top: 2rem;
-		margin-bottom: 1rem;
-	}
-
-	h3 {
-		font-size: 1.25rem;
-		margin-top: 1rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.organization-info {
-		margin-bottom: 2rem;
-	}
-
-	.last-updated {
-		font-style: italic;
-	}
-
-	section {
-		margin-bottom: 2rem;
-	}
-
-	.contact-info-box {
-		background: #f5f5f5;
-		padding: 1rem;
-		border-radius: 4px;
-		margin: 1rem 0;
-	}
-
-	.data-category {
-		margin: 1rem 0;
-	}
-
-	ul {
-		margin-left: 1.5rem;
-	}
-
-	li {
-		margin: 0.5rem 0;
-	}
-
-	a {
-		color: #0066cc;
-		text-decoration: underline;
-	}
-
-	a:hover {
-		text-decoration: none;
-	}
-</style>
+    </section>
+  </main>
+</SiteLayout>

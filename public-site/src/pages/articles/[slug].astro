@@ -1,4 +1,5 @@
 ---
+import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getArticleBySlug, getPublishedArticles } from '../../lib/firestore';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../../lib/seo';
 
@@ -51,80 +52,88 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<Fragment set:html={metaTags} />
-		<Fragment set:html={jsonLd} />
-	</head>
-	<body>
-		<main>
-			<article>
-				<header>
-					<h1>{article.title}</h1>
-					{article.publishedAt && (
-						<time datetime={article.publishedAt.toISOString()}>
-							Published: {article.publishedAt.toLocaleDateString()}
-						</time>
-					)}
-					{article.tags && article.tags.length > 0 && (
-						<div>
-							{article.tags.map((tag) => (
-								<span>{tag}</span>
-							))}
-						</div>
-					)}
-				</header>
-				{article.excerpt && <p class="excerpt">{article.excerpt}</p>}
-				<div class="content" set:html={article.content} />
-			</article>
-		</main>
-	</body>
-</html>
+<SiteLayout
+  title={`${article.title} - DCCI Ministries`}
+  description={description}
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive App</h2>
+      <p>For the full interactive experience with comments, bookmarks, and more features, open this article in our app:</p>
+      <a href={`/app/article/${article.slug}`} class="cta-button">Open in App</a>
+    </div>
 
-<style>
-	main {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 2rem;
-	}
+    <article>
+      <header>
+        <h1>{article.title}</h1>
+        {article.publishedAt && (
+          <time datetime={article.publishedAt.toISOString()}>
+            Published: {article.publishedAt.toLocaleDateString()}
+          </time>
+        )}
+        {article.tags && article.tags.length > 0 && (
+          <div class="tags">
+            {article.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        )}
+      </header>
+      {article.excerpt && <p class="excerpt">{article.excerpt}</p>}
+      <div class="content" set:html={article.content} />
+    </article>
+    <style>
+      article header {
+        margin-bottom: 2rem;
+      }
 
-	article header {
-		margin-bottom: 2rem;
-	}
+      article h1 {
+        margin-bottom: 1rem;
+      }
 
-	article h1 {
-		margin-bottom: 1rem;
-	}
+      .excerpt {
+        font-size: 1.2em;
+        font-style: italic;
+        margin-bottom: 2rem;
+        color: #666;
+      }
 
-	.excerpt {
-		font-size: 1.2em;
-		font-style: italic;
-		margin-bottom: 2rem;
-		color: #666;
-	}
+      .content {
+        line-height: 1.6;
+      }
 
-	.content {
-		line-height: 1.6;
-	}
+      .content :global(h1),
+      .content :global(h2),
+      .content :global(h3) {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
 
-	.content :global(h1),
-	.content :global(h2),
-	.content :global(h3) {
-		margin-top: 2rem;
-		margin-bottom: 1rem;
-	}
+      .content :global(p) {
+        margin-bottom: 1rem;
+      }
 
-	.content :global(p) {
-		margin-bottom: 1rem;
-	}
+      .content :global(img) {
+        max-width: 100%;
+        height: auto;
+      }
 
-	.content :global(img) {
-		max-width: 100%;
-		height: auto;
-	}
-</style>
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      .tag {
+        background: #f0f0f0;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+      }
+    </style>
+  </main>
+</SiteLayout>
 

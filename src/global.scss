@@ -80,3 +80,56 @@ textarea,
   -ms-user-select: none;
   user-select: none;
 }
+
+/**
+ * Accessibility: Clear focus indicators for admin panel
+ * All buttons and links in admin pages get a prominent 5px success-colored border when focused
+ */
+ion-content[class*="admin"],
+[class*="admin"] ion-content,
+.admin-login-page,
+.dashboard-container,
+.settings-container,
+.emergency-controls-container,
+.maintenance-container,
+.manage-content-container,
+.user-management-container,
+.forgot-password-container,
+.reset-password-container,
+.verification-container {
+  ion-button,
+  button,
+  a,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+    }
+  }
+}
+
+// Also apply to all admin pages via route-based selector
+// This catches any page under /admin route
+app-admin ion-content {
+  ion-button,
+  button,
+  a,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+    }
+  }
+}

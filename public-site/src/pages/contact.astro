@@ -1,11 +1,12 @@
 ---
+import SiteLayout from '../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
 
 const canonicalUrl = absoluteUrl('/contact/');
 
 const seoData = {
   title: 'Contact Us - DCCI Ministries',
-  description: 'Contact DCCI Ministries. Get in touch with us for content, theological, or technical inquiries.',
+  description: 'Contact DCCI Ministries. Get in touch with us for content, theological, or technical inquiries. We welcome respectful questions and communication.',
   canonicalUrl,
   type: 'website' as const
 };
@@ -14,103 +15,65 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<Fragment set:html={metaTags} />
-		<Fragment set:html={jsonLd} />
-	</head>
-	<body>
-		<main>
-			<h1>CONTACT US</h1>
+<SiteLayout
+  title="Contact Us - DCCI Ministries"
+  description="Contact DCCI Ministries. Get in touch with us for content, theological, or technical inquiries. We welcome respectful questions and communication."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Contact Form</h2>
+      <p>For a better experience with our contact form and to access all features, visit our interactive site:</p>
+      <a href="/app/contact" class="cta-button">Open Interactive Site</a>
+    </div>
 
-			<div class="organization-info">
-				<p><strong>DCCI Ministries</strong></p>
-			</div>
+    <h1>Contact Us</h1>
 
-			<div class="intro-text">
-				<p>We welcome respectful inquiries, questions, and communication.</p>
-				<p>Please use the appropriate contact below so your message reaches the right place.</p>
-			</div>
+    <div class="intro-text">
+      <p>We welcome respectful inquiries, questions, and communication.</p>
+      <p>Please use the appropriate contact below so your message reaches the right place.</p>
+    </div>
 
-			<section>
-				<h2>CONTENT, THEOLOGICAL, OR MINISTRY INQUIRIES</h2>
-				<p>For questions about teachings, articles, videos, theology, or the mission of DCCI Ministries:</p>
-				<div class="contact-info-box">
-					<p><strong>Email:</strong> <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
-				</div>
-			</section>
+    <section>
+      <h2>Content, Theological, or Ministry Inquiries</h2>
+      <p>For questions about teachings, articles, videos, theology, or the mission of DCCI Ministries:</p>
+      <div class="contact-info-box">
+        <p><strong>Email:</strong> <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+      </div>
+    </section>
 
-			<section>
-				<h2>WEBSITE, TECHNICAL, OR BUG REPORTS</h2>
-				<p>For issues related to the website, accessibility, errors, or technical concerns:</p>
-				<div class="contact-info-box">
-					<p><strong>Email:</strong> <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
-				</div>
-			</section>
+    <section>
+      <h2>Website, Technical, or Bug Reports</h2>
+      <p>For issues related to the website, accessibility, errors, or technical concerns:</p>
+      <div class="contact-info-box">
+        <p><strong>Email:</strong> <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
+      </div>
+    </section>
 
-			<section class="note-section">
-				<p><strong>Please note:</strong></p>
-				<p>DCCI Ministries does not provide medical, legal, or professional counseling services through this website.</p>
-				<p>We aim to respond to legitimate inquiries as reasonably and promptly as possible.</p>
-			</section>
-		</main>
-	</body>
-</html>
+    <section class="note-section">
+      <p><strong>Please note:</strong></p>
+      <p>DCCI Ministries does not provide medical, legal, or professional counseling services through this website.</p>
+      <p>We aim to respond to legitimate inquiries as reasonably and promptly as possible.</p>
+    </section>
+    <style>
+      .intro-text {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
 
-<style>
-	main {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 2rem;
-	}
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
 
-	h1 {
-		font-size: 2rem;
-		margin-bottom: 1rem;
-	}
-
-	h2 {
-		font-size: 1.5rem;
-		margin-top: 2rem;
-		margin-bottom: 1rem;
-	}
-
-	.organization-info {
-		margin-bottom: 2rem;
-	}
-
-	.intro-text {
-		margin-bottom: 2rem;
-		font-size: 1.1rem;
-	}
-
-	section {
-		margin-bottom: 2rem;
-	}
-
-	.contact-info-box {
-		background: #f5f5f5;
-		padding: 1rem;
-		border-radius: 4px;
-		margin: 1rem 0;
-	}
-
-	.note-section {
-		margin-top: 3rem;
-		padding-top: 2rem;
-		border-top: 1px solid #ddd;
-	}
-
-	a {
-		color: #0066cc;
-		text-decoration: underline;
-	}
-
-	a:hover {
-		text-decoration: none;
-	}
-</style>
+      .note-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </main>
+</SiteLayout>

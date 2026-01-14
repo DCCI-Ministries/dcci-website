@@ -3,7 +3,7 @@
  * Used only during Astro build time to fetch published articles
  */
 
-import { firestoreAdmin } from './firebaseAdmin';
+import { getFirestoreAdmin } from './firebaseAdmin';
 
 /**
  * Article interface matching Firestore schema
@@ -29,7 +29,7 @@ export interface Article {
  * Get all published articles
  */
 export async function getPublishedArticles(): Promise<Article[]> {
-  const db = firestoreAdmin;
+  const db = getFirestoreAdmin();
   
   try {
     const articlesRef = db.collection('content');
@@ -108,7 +108,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
  * Also checks oldSlugs for redirects
  */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const db = firestoreAdmin;
+  const db = getFirestoreAdmin();
   
   try {
     // First, try to find by current slug

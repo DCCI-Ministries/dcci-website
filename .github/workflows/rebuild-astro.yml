@@ -1,0 +1,55 @@
+name: Rebuild Astro Site
+
+on:
+  repository_dispatch:
+    types: [rebuild-astro]
+  workflow_dispatch:
+    inputs:
+      article_id:
+        description: 'Article ID that triggered rebuild (optional)'
+        required: false
+        type: string
+
+jobs:
+  rebuild-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install Astro dependencies
+        run: npm ci
+        working-directory: ./public-site
+
+      - name: Build all (Angular + Astro)
+        run: npm run build:all
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+          channelId: live
+
+      - name: Log deployment
+        run: |
+          echo "✅ Astro site rebuilt and deployed successfully"
+          if [ -n "${{ github.event.client_payload.articleId }}" ]; then
+            echo "Triggered by article: ${{ github.event.client_payload.articleId }}"
+          fi

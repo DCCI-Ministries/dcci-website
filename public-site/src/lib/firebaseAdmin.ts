@@ -1,25 +1,28 @@
 /**
  * Firebase Admin SDK initializer (server-only)
- * 
+ *
  * This module initializes Firebase Admin SDK using credentials from process.env.
  * It is designed to work only in server-side contexts (Astro build-time, API routes).
- * 
+ *
  * DO NOT import this in client-side code.
+ * 
+ * SECURITY: firebase-admin is a Node.js-only module and will fail if bundled for client.
+ * Only import this in Astro frontmatter (server-side) or API routes.
  */
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 let firestoreAdminInstance: Firestore | null = null;
 
 /**
  * Initialize Firebase Admin SDK using credentials from process.env
- * 
+ *
  * Reads from:
  * - FIREBASE_PROJECT_ID
  * - FIREBASE_CLIENT_EMAIL
  * - FIREBASE_PRIVATE_KEY (handles escaped newlines)
- * 
+ *
  * Initializes only once (checks admin.apps.length)
  */
 function initializeFirebaseAdmin(): Firestore {
@@ -72,9 +75,24 @@ function initializeFirebaseAdmin(): Firestore {
 }
 
 /**
- * Exported Firestore Admin instance
- * 
+ * Get Firestore Admin instance (lazy initialization)
+ *
  * This is initialized on first access and reused for subsequent calls.
- * Safe to import in Astro frontmatter and server-side contexts.
+ * Safe to import in Astro frontmatter and server-side contexts only.
+ * 
+ * Usage in Astro pages:
+ * ---
+ * import { getFirestoreAdmin } from '../lib/firebaseAdmin';
+ * const db = getFirestoreAdmin();
+ * ---
+ */
+export function getFirestoreAdmin(): Firestore {
+  return initializeFirebaseAdmin();
+}
+
+/**
+ * Exported Firestore Admin instance (for backward compatibility)
+ * 
+ * @deprecated Use getFirestoreAdmin() instead for explicit lazy loading
  */
 export const firestoreAdmin = initializeFirebaseAdmin();

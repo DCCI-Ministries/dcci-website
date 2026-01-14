@@ -13,9 +13,13 @@ Allow: /disclaimer/
 Allow: /accessibility/
 Allow: /contact/
 
-# Disallow admin routes
+# Disallow admin routes (Ionic SPA)
 Disallow: /admin/
 Disallow: /admin/*
+
+# Disallow app routes (Ionic SPA - use Astro SEO pages instead)
+Disallow: /app/
+Disallow: /app/*
 
 # Disallow API routes (if any)
 Disallow: /api/
