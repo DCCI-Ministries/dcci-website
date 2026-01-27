@@ -16,7 +16,6 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
-  IonChip,
   IonCheckbox,
   LoadingController,
   ToastController,
@@ -47,7 +46,6 @@ import { firstValueFrom } from 'rxjs';
     IonSelect,
     IonSelectOption,
     IonSpinner,
-    IonChip,
     IonCheckbox,
     CommonModule,
     FormsModule
@@ -315,6 +313,11 @@ export class DraftsPage implements OnInit, OnDestroy {
       return date.toDate();
     }
     return new Date(date);
+  }
+
+  getThumbnailUrl(article: Content): string | null {
+    const data = article as any;
+    return data.thumbnailUrl || article.featuredImage || null;
   }
 
   private async showToast(message: string, color: 'success' | 'danger' = 'success') {

@@ -1,4 +1,4 @@
-<ion-menu #menu side="end" menuId="main-menu" contentId="main-content" type="overlay" role="navigation" aria-label="Main navigation menu" (ionDidOpen)="onMenuOpen()" (ionDidClose)="onMenuClose()">
+<ion-menu #menu side="end" menuId="main-menu" contentId="main-content" type="overlay" role="navigation" aria-label="Main navigation menu" (ionWillOpen)="onMenuWillOpen()" (ionDidOpen)="onMenuOpen()" (ionDidClose)="onMenuClose()">
   <ion-header>
     <ion-toolbar>
       <ion-title>Menu</ion-title>

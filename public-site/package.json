@@ -4,12 +4,15 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/check-firebase-admin.js && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check:firebase-admin": "node scripts/check-firebase-admin.js"
   },
   "dependencies": {
-    "astro": "^5.16.6",
     "firebase-admin": "^13.0.0"
+  },
+  "devDependencies": {
+    "astro": "^5.16.9"
   }
 }

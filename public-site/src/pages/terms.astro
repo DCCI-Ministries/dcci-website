@@ -1,0 +1,176 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+
+const canonicalUrl = absoluteUrl('/terms/');
+
+const seoData = {
+  title: 'Terms of Service - DCCI Ministries',
+  description: 'Terms of Service for DCCI Ministries. Please read these terms before using our website. By using the service, you agree to be bound by these terms.',
+  canonicalUrl,
+  type: 'website' as const
+};
+
+const metaTags = generateMetaTags(seoData);
+const jsonLd = generateJSONLD(seoData);
+---
+
+<SiteLayout
+  title="Terms of Service - DCCI Ministries"
+  description="Terms of Service for DCCI Ministries. Please read these terms before using our website. By using the service, you agree to be bound by these terms."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Site</h2>
+      <p>For the full interactive experience and to access all features, visit our interactive site:</p>
+      <a href="/app/welcome" class="cta-button">Open Interactive Site</a>
+    </div>
+
+    <h1>Terms of Service</h1>
+
+    <div class="organization-info">
+      <p><strong>DCCI Ministries</strong></p>
+      <p class="last-updated">Last updated: January 2026</p>
+    </div>
+
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+    </style>
+
+			<section>
+				<h2>1. ACCEPTANCE OF TERMS</h2>
+				<p>By accessing and using the website <a href="https://dcciministries.com" target="_blank" rel="noopener noreferrer">https://dcciministries.com</a> (the "Service"), you accept and agree to be bound by the terms and provision of this agreement.</p>
+				<p>If you do not agree to these Terms of Service, please do not use the Service.</p>
+			</section>
+
+			<section>
+				<h2>2. WHO WE ARE</h2>
+				<p>DCCI Ministries ("we," "us," or "our") operates the website https://dcciministries.com.</p>
+				<p>We are a Christian ministry based primarily in the United Kingdom, with collaborators and technical administration in the United States.</p>
+
+				<div class="contact-info-box">
+					<p><strong>CONTACT INFORMATION</strong></p>
+					<ul>
+						<li><strong>Privacy, content, or theological inquiries:</strong><br>
+							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+						<li><strong>Website, technical, or bug reports:</strong><br>
+							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+					</ul>
+				</div>
+			</section>
+
+			<section>
+				<h2>3. USE OF SERVICE</h2>
+				<p>You agree to use the Service only for lawful purposes and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the Service.</p>
+				<p>Prohibited behavior includes:</p>
+				<ul>
+					<li>Harassing or harming other users</li>
+					<li>Transmitting any material that is offensive, defamatory, or illegal</li>
+					<li>Attempting to gain unauthorized access to the Service or its related systems</li>
+					<li>Using the Service to transmit spam, malware, or other harmful content</li>
+					<li>Violating any applicable laws or regulations</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>4. INTELLECTUAL PROPERTY</h2>
+				<p>All content on this Service, including but not limited to text, graphics, logos, images, audio clips, digital downloads, and software, is the property of DCCI Ministries or its content suppliers and is protected by international copyright laws.</p>
+				<p>You may not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store, or transmit any of the material on our Service without prior written consent, except as follows:</p>
+				<ul>
+					<li>Your computer may temporarily store copies of such materials in RAM incidental to your accessing and viewing those materials</li>
+					<li>You may store files that are automatically cached by your web browser for display enhancement purposes</li>
+					<li>You may print or download one copy of a reasonable number of pages of the Service for your own personal, non-commercial use</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>5. USER ACCOUNTS AND COMMENTS</h2>
+				<p>User accounts and comments are planned features but are not currently available to the general public.</p>
+				<p>When these features are enabled:</p>
+				<ul>
+					<li>You are responsible for maintaining the confidentiality of your account credentials</li>
+					<li>You agree to notify us immediately of any unauthorized access to your account</li>
+					<li>Comments may be moderated, and we reserve the right to remove any content that violates these Terms</li>
+					<li>Abuse, harassment, spam, or illegal content will not be tolerated and may result in account termination</li>
+				</ul>
+				<p>A separate Comment Policy will apply when comments are enabled.</p>
+			</section>
+
+			<section>
+				<h2>6. THIRD-PARTY LINKS AND CONTENT</h2>
+				<p>The Service may contain links to third-party websites or embed third-party content (such as YouTube videos). These links and embedded content are provided for your convenience only.</p>
+				<p>We do not endorse or assume responsibility for the content, privacy policies, or practices of third-party websites or services. Your interactions with third-party websites are solely between you and the third party.</p>
+			</section>
+
+			<section>
+				<h2>7. DISCLAIMERS</h2>
+				<p>The information on this Service is provided on an "as is" basis. To the fullest extent permitted by law, we exclude:</p>
+				<ul>
+					<li>All conditions, warranties, and other terms which might otherwise be implied by statute, common law, or the law of equity</li>
+					<li>Any liability for any direct, indirect, or consequential loss or damage incurred by any user in connection with the Service</li>
+				</ul>
+				<p>We do not warrant that the Service will be available at all times, or that the information on the Service is complete, accurate, or up-to-date.</p>
+			</section>
+
+			<section>
+				<h2>8. LIMITATION OF LIABILITY</h2>
+				<p>To the maximum extent permitted by applicable law, DCCI Ministries shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from your use of the Service.</p>
+			</section>
+
+			<section>
+				<h2>9. INDEMNIFICATION</h2>
+				<p>You agree to defend, indemnify, and hold harmless DCCI Ministries and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable attorney's fees, arising out of or in any way connected with your access to or use of the Service or your violation of these Terms.</p>
+			</section>
+
+			<section>
+				<h2>10. TERMINATION</h2>
+				<p>We reserve the right to terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+				<p>Upon termination, your right to use the Service will cease immediately.</p>
+			</section>
+
+			<section>
+				<h2>11. CHANGES TO TERMS</h2>
+				<p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.</p>
+				<p>The "Last updated" date at the top of this page will always reflect the most recent revision. Your continued use of the Service after any changes constitutes acceptance of the new Terms.</p>
+			</section>
+
+			<section>
+				<h2>12. GOVERNING LAW</h2>
+				<p>These Terms shall be governed by and construed in accordance with the laws of the United Kingdom, without regard to its conflict of law provisions.</p>
+			</section>
+
+			<section>
+				<h2>13. SEVERABILITY</h2>
+				<p>If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect.</p>
+			</section>
+
+			<section>
+				<h2>14. CONTACT US</h2>
+				<p>If you have any questions about these Terms of Service, please contact us:</p>
+				<div class="contact-info-box">
+					<ul>
+						<li><strong>Theological / content inquiries:</strong><br>
+							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+						<li><strong>Website, technical, or bug reports:</strong><br>
+							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+					</ul>
+				</div>
+    </section>
+  </main>
+</SiteLayout>

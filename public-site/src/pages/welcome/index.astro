@@ -1,11 +1,12 @@
 ---
+import SiteLayout from '../../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../../lib/seo';
 
 const canonicalUrl = absoluteUrl('/welcome/');
 
 const seoData = {
   title: 'DCCI Ministries - Defend Christ, Critique Islam',
-  description: 'DCCI Ministries - Building bridges through understanding and dialogue. Defend Christ, Critique Islam.',
+  description: 'Proclaiming Jesus Christ where truth is costly. DCCI Ministries engages with Islam through apologetics and polemics, preaching the Gospel with love and truth.',
   canonicalUrl,
   type: 'website' as const
 };
@@ -14,21 +15,90 @@ const metaTags = generateMetaTags(seoData);
 const jsonLd = generateJSONLD(seoData);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		{@html metaTags}
-		{@html jsonLd}
-	</head>
-	<body>
-		<main>
-			<h1>Welcome to DCCI Ministries</h1>
-			<p>Building bridges through understanding and dialogue.</p>
-			<p>Defend Christ, Critique Islam.</p>
-		</main>
-	</body>
-</html>
+<SiteLayout
+  title="DCCI Ministries - Defend Christ, Critique Islam"
+  description="Proclaiming Jesus Christ where truth is costly. DCCI Ministries engages with Islam through apologetics and polemics, preaching the Gospel with love and truth."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Site</h2>
+      <p>For the full interactive experience with articles, videos, contact forms, and more features, visit our interactive site:</p>
+      <a href="/app/welcome" class="cta-button">Open Interactive Site</a>
+    </div>
+
+    <h1>Welcome to DCCI Ministries</h1>
+    <p class="tagline">Proclaiming Jesus Christ where truth is costly.</p>
+    <p class="tagline-sub">Defend Christ, Critique Islam</p>
+
+    <section class="mission-section">
+      <h2>Our Mission</h2>
+      <p>
+        Our motivation is love for Muslims to bring them to repentance and faith in Christ for eternal life. We seek to preach the Gospel to Muslims using apologetics and polemics, regularly engaging with Muslims at Speakers Corner.
+      </p>
+      <p>
+        Like the Apostle Paul, "we do not use deception, nor do we distort the Word of God" (2 Cor 4:2). Rather "we demolish arguments and every pretension that sets itself up against the knowledge of God."
+      </p>
+    </section>
+
+    <section class="purpose-section">
+      <h2>What We Offer</h2>
+      <p>This ministry exists to proclaim Jesus Christ where speaking freely can carry a cost.</p>
+      <ul>
+        <li><strong>Apologetics & Public Witness:</strong> Engaging Islam and false teaching with Christ-centered apologetics through teaching, dialogue, and public witness.</li>
+        <li><strong>Support for Seekers & the Persecuted:</strong> Encouragement and clarity for those questioning Islam, facing pressure, or seeking truth—especially converts and those at risk.</li>
+        <li><strong>Teaching Archive & Study Resources:</strong> A curated library of videos and articles to help you understand the Gospel, respond thoughtfully, and grow in faith.</li>
+      </ul>
+    </section>
+
+    <section class="testimony-section">
+      <h2>Our Foundation</h2>
+      <p class="testimony-statement"><strong>Jesus is LORD</strong></p>
+      <p class="testimony-verse">John 20:31 — "but these are written so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in his name"</p>
+    </section>
+    <style>
+      .tagline {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0066cc;
+        margin-bottom: 0.5rem;
+      }
+
+      .tagline-sub {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+      }
+
+      .mission-section {
+        margin-top: 2rem;
+      }
+
+      .purpose-section {
+        margin-top: 2rem;
+      }
+
+      .testimony-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f9f9f9;
+        border-left: 4px solid #0066cc;
+        border-radius: 4px;
+      }
+
+      .testimony-statement {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0066cc;
+        margin-bottom: 1rem;
+      }
+
+      .testimony-verse {
+        font-style: italic;
+        color: #666;
+      }
+    </style>
+  </main>
+</SiteLayout>
 

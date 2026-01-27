@@ -10,12 +10,129 @@
       {
         "source": "**/*.@(png|jpg|jpeg|gif|webp|svg)",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      },
+      {
+        "source": "/admin/**",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        ]
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/welcome",
+        "destination": "/welcome/",
+        "type": 301
+      },
+      {
+        "source": "/articles",
+        "destination": "/articles/",
+        "type": 301
+      },
+      {
+        "source": "/articles/:slug",
+        "destination": "/articles/:slug/",
+        "type": 301
+      },
+      {
+        "source": "/privacy",
+        "destination": "/privacy/",
+        "type": 301
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms/",
+        "type": 301
+      },
+      {
+        "source": "/disclaimer",
+        "destination": "/disclaimer/",
+        "type": 301
+      },
+      {
+        "source": "/accessibility",
+        "destination": "/accessibility/",
+        "type": 301
+      },
+      {
+        "source": "/contact",
+        "destination": "/contact/",
+        "type": 301
       }
     ],
     "rewrites": [
       {
         "source": "/",
-        "destination": "/welcome/"
+        "destination": "/welcome/index.html"
+      },
+      {
+        "source": "/welcome",
+        "destination": "/welcome/index.html"
+      },
+      {
+        "source": "/welcome/",
+        "destination": "/welcome/index.html"
+      },
+      {
+        "source": "/articles",
+        "destination": "/articles/index.html"
+      },
+      {
+        "source": "/articles/",
+        "destination": "/articles/index.html"
+      },
+      {
+        "source": "/articles/:slug",
+        "destination": "/articles/:slug/index.html"
+      },
+      {
+        "source": "/articles/:slug/",
+        "destination": "/articles/:slug/index.html"
+      },
+      {
+        "source": "/privacy",
+        "destination": "/privacy/index.html"
+      },
+      {
+        "source": "/privacy/",
+        "destination": "/privacy/index.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms/index.html"
+      },
+      {
+        "source": "/terms/",
+        "destination": "/terms/index.html"
+      },
+      {
+        "source": "/disclaimer",
+        "destination": "/disclaimer/index.html"
+      },
+      {
+        "source": "/disclaimer/",
+        "destination": "/disclaimer/index.html"
+      },
+      {
+        "source": "/accessibility",
+        "destination": "/accessibility/index.html"
+      },
+      {
+        "source": "/accessibility/",
+        "destination": "/accessibility/index.html"
+      },
+      {
+        "source": "/contact",
+        "destination": "/contact/index.html"
+      },
+      {
+        "source": "/contact/",
+        "destination": "/contact/index.html"
+      },
+      {
+        "source": "/app/**",
+        "destination": "/index.html"
       },
       {
         "source": "/admin/**",

@@ -102,6 +102,15 @@
     ion-icon {
       font-size: 1.1rem;
     }
+
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+    }
   }
 }
 
@@ -221,26 +230,55 @@
   min-height: 0;
 }
 
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
-  .action-btn {
-    --border-radius: 12px;
-    --background: #ffffff;
-    --color: var(--ion-color-primary);
-    --border-color: var(--ion-color-primary);
-    --border-width: 2px;
-    font-weight: 600;
-    height: 44px;
+    .action-btn {
+      --border-radius: 12px;
+      --background: #ffffff;
+      --color: var(--ion-color-primary);
+      --border-color: var(--ion-color-primary);
+      --border-width: 2px;
+      font-weight: 600;
+      height: 44px;
+      position: relative;
 
-    ion-icon {
-      font-size: 1rem;
-      color: var(--ion-color-primary);
+      ion-icon {
+        font-size: 1rem;
+        color: var(--ion-color-primary);
+      }
+
+      &:focus,
+      &:focus-visible {
+        --border-color: #2dd36f !important; // Ionic success color
+        --border-width: 5px !important;
+        box-shadow: 0 0 0 5px #2dd36f !important;
+        outline: 5px solid #2dd36f !important;
+        outline-offset: 2px !important;
+      }
+      
+      // Add a visible focus ring using a pseudo-element wrapper
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -5px;
+        border: 5px solid transparent;
+        border-radius: calc(var(--border-radius, 12px) + 5px);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: -1;
+      }
+      
+      &:focus::after,
+      &:focus-visible::after {
+        border-color: #2dd36f;
+        opacity: 1;
+      }
     }
   }
-}
 
 .activity-list {
   flex: 1;
@@ -528,6 +566,15 @@
     ion-icon {
       font-size: 1rem;
     }
+
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+    }
   }
 }
 
@@ -595,3 +642,59 @@
 }
 
 // Dark mode is handled automatically by Ionic's CSS variables
+
+// Accessibility: Clear focus indicators for all interactive elements
+.dashboard-container {
+  // All buttons in admin dashboard - use both :focus and :focus-visible for maximum compatibility
+  ion-button {
+    &:focus,
+    &:focus-visible {
+      // Use Ionic CSS variables
+      --border-color: #2dd36f !important; // Ionic default success color
+      --border-width: 5px !important;
+      --border-style: solid !important;
+      // Also apply box-shadow directly to the host element
+      box-shadow: 0 0 0 5px #2dd36f !important;
+      // Ensure outline is visible
+      outline: 5px solid #2dd36f !important;
+      outline-offset: 2px !important;
+    }
+  }
+  
+  // Wrap buttons in action-buttons to ensure focus styles apply
+  .action-buttons {
+    ion-button {
+      &:focus,
+      &:focus-visible {
+        --border-color: #2dd36f !important;
+        --border-width: 5px !important;
+        box-shadow: 0 0 0 5px #2dd36f !important;
+        outline: 5px solid #2dd36f !important;
+        outline-offset: 2px !important;
+      }
+    }
+  }
+
+  // All links
+  a {
+    &:focus,
+    &:focus-visible {
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+    }
+  }
+
+  // All clickable items
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    &:focus,
+    &:focus-visible {
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+    }
+  }
+}

@@ -32,15 +32,66 @@ function log(message, type = 'info') {
   console.log(`${colors[type]}${message}${colors.reset}`);
 }
 
-function runCommand(command, description) {
+function runCommand(command, description, options = {}) {
   try {
     log(`🔄 ${description}...`, 'info');
-    const result = execSync(command, { stdio: 'inherit', encoding: 'utf8' });
+    const execOptions = {
+      stdio: 'inherit',
+      encoding: 'utf8',
+      ...options
+    };
+    const result = execSync(command, execOptions);
     log(`✅ ${description} completed successfully`, 'success');
     return result;
   } catch (error) {
     log(`❌ ${description} failed: ${error.message}`, 'error');
     process.exit(1);
+  }
+}
+
+function copyAstroFiles(src, dest) {
+  if (!fs.existsSync(src) || !fs.existsSync(dest)) {
+    return;
+  }
+
+  function copyDir(srcDir, destDir) {
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    
+    const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, entry.name);
+      
+      if (entry.isDirectory()) {
+        copyDir(srcPath, destPath);
+      } else {
+        // Skip Angular's index.html - we don't want to overwrite it
+        if (entry.name === 'index.html' && destDir === dest) {
+          continue;
+        }
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      // Skip index.html - preserve Angular's version
+      if (entry.name === 'index.html') {
+        continue;
+      }
+      fs.copyFileSync(srcPath, destPath);
+    }
   }
 }
 
@@ -86,9 +137,30 @@ function deploy(environment) {
   const currentProject = getCurrentFirebaseProject();
   log(`📍 Current Firebase project: ${currentProject || 'None'}`, 'info');
 
-  // Build the application
+  // Build the application (Angular + Astro)
   log(`🏗️  Building for ${env.buildConfig} configuration...`, 'info');
-  runCommand(`ng build --configuration ${env.buildConfig}`, `Build for ${env.buildConfig}`);
+  log(`📦 Building Angular app...`, 'info');
+  runCommand(`ng build --configuration ${env.buildConfig}`, `Build Angular for ${env.buildConfig}`);
+  
+  // Build Astro public site
+  log(`📦 Building Astro public site...`, 'info');
+  const publicSitePath = path.join(__dirname, '..', 'public-site');
+  runCommand(`npm run build`, `Build Astro site`, { cwd: publicSitePath });
+  
+  // Copy Astro output to dist/app (using build-all.js logic)
+  log(`📦 Merging Astro output with Angular build...`, 'info');
+  const distAppPath = path.join(__dirname, '..', 'dist', 'app');
+  const distPublicSitePath = path.join(__dirname, '..', 'dist', 'public-site');
+  
+  if (!fs.existsSync(distPublicSitePath)) {
+    log(`⚠️  Astro output not found, skipping merge`, 'warning');
+  } else if (!fs.existsSync(distAppPath)) {
+    log(`⚠️  Angular output not found, skipping merge`, 'warning');
+  } else {
+    // Copy Astro files to dist/app (preserving Angular's index.html)
+    copyAstroFiles(distPublicSitePath, distAppPath);
+    log(`✅ Astro files merged successfully`, 'success');
+  }
 
   // Switch to target Firebase project
   log(`🔄 Switching to Firebase project: ${env.projectId}`, 'info');

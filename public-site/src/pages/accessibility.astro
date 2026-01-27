@@ -1,0 +1,80 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+
+const canonicalUrl = absoluteUrl('/accessibility/');
+
+const seoData = {
+  title: 'Accessibility Statement - DCCI Ministries',
+  description: 'Accessibility statement for DCCI Ministries. Our commitment to making our website accessible to all visitors.',
+  canonicalUrl,
+  type: 'website' as const
+};
+
+const metaTags = generateMetaTags(seoData);
+const jsonLd = generateJSONLD(seoData);
+---
+
+<SiteLayout
+  title="Accessibility Statement - DCCI Ministries"
+  description="Accessibility statement for DCCI Ministries. Our commitment to making our website accessible to all visitors."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+			<h1>ACCESSIBILITY STATEMENT</h1>
+
+			<div class="organization-info">
+				<p><strong>DCCI Ministries</strong></p>
+				<p class="last-updated">Last updated: January 2026</p>
+			</div>
+
+			<div class="intro-text">
+				<p>DCCI Ministries is committed to making this website as accessible and usable as possible for all visitors, including people with disabilities.</p>
+				<p>We strive to follow recognized accessibility best practices and to improve accessibility as the site grows and new features are added.</p>
+			</div>
+
+			<section>
+				<h2>ACCESSIBILITY SUPPORT</h2>
+				<p>If you experience difficulty accessing any part of this website, encounter a barrier, or have suggestions for improvement, we welcome your feedback.</p>
+				<div class="contact-info-box">
+					<p><strong>Please contact us at:</strong><br>
+					<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
+				</div>
+				<p>We will make reasonable efforts to address accessibility concerns in good faith.</p>
+			</section>
+
+			<section>
+				<h2>LIMITATIONS</h2>
+				<p>While we aim for broad accessibility, some third-party content (such as embedded videos or external platforms) may not fully conform to accessibility standards. These elements are governed by their respective providers.</p>
+			</section>
+
+			<section>
+				<h2>ONGOING COMMITMENT</h2>
+				<p>Accessibility is an ongoing effort. We view it as part of responsible stewardship and service to others.</p>
+    </section>
+
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
+
+      .intro-text {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+    </style>
+  </main>
+</SiteLayout>

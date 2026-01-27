@@ -12,22 +12,22 @@
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
-  
+
   <!-- Suppress cross-origin errors from YouTube iframes -->
   <script>
     // Suppress expected cross-origin errors from YouTube embeds
     window.addEventListener('error', function(e) {
-      if (e.message && e.message.includes('Blocked a frame with origin') && 
+      if (e.message && e.message.includes('Blocked a frame with origin') &&
           e.message.includes('youtube.com')) {
         e.preventDefault();
         return false;
       }
     }, true);
-    
+
     // Also catch uncaught security errors
     window.addEventListener('unhandledrejection', function(e) {
-      if (e.reason && e.reason.message && 
-          e.reason.message.includes('Blocked a frame with origin') && 
+      if (e.reason && e.reason.message &&
+          e.reason.message.includes('Blocked a frame with origin') &&
           e.reason.message.includes('youtube.com')) {
         e.preventDefault();
         return false;

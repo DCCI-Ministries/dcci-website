@@ -78,8 +78,9 @@ export class ArticlePage implements OnInit, AfterViewInit {
 
       this.content = loadedContent;
 
-      // Sanitize the HTML content
-      this.sanitizedContent = this.sanitizer.bypassSecurityTrustHtml(this.content.content || '');
+      // Normalize and sanitize the HTML content
+      const cleaned = this.normalizeImportedHtml(this.content.content || '');
+      this.sanitizedContent = this.sanitizer.bypassSecurityTrustHtml(cleaned);
 
       // Make videos responsive after content is set and DOM updates
       setTimeout(() => this.makeVideosResponsive(), 0);
@@ -131,7 +132,7 @@ export class ArticlePage implements OnInit, AfterViewInit {
   }
 
   goHome() {
-    this.router.navigate(['/home']);
+    this.router.navigate(['/welcome']);
   }
 
   getThumbnailUrl(content: Content): string | null {
@@ -190,5 +191,67 @@ export class ArticlePage implements OnInit, AfterViewInit {
 
   onTagClick(tag: string) {
     this.router.navigate(['/articles'], { queryParams: { tag: tag } });
+  }
+
+  /**
+   * Normalize imported HTML content by cleaning problematic characters
+   * that cause word-wrapping issues (non-breaking spaces, soft hyphens, zero-width chars)
+   */
+  private normalizeImportedHtml(raw: string): string {
+    if (!raw) return '';
+
+    try {
+      // Clean common entity forms in the raw string before parsing
+      let cleaned = raw
+        // Replace non-breaking space entities (case-insensitive)
+        .replace(/&nbsp;/gi, ' ')
+        // Remove soft hyphen entities
+        .replace(/&shy;/gi, '')
+        .replace(/&#173;/g, '')
+        .replace(/&#xad;/gi, '')
+        // Remove zero-width space entities
+        .replace(/&ZeroWidthSpace;/gi, '')
+        .replace(/&#8203;/g, '')
+        .replace(/&#x200b;/gi, '');
+
+      // Parse the HTML using DOMParser
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(cleaned, 'text/html');
+
+      // Walk all text nodes and clean textContent
+      const walker = doc.createTreeWalker(
+        doc.body || doc.documentElement,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
+
+      const textNodes: Text[] = [];
+      let node: Node | null = walker.nextNode();
+      while (node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          textNodes.push(node as Text);
+        }
+        node = walker.nextNode();
+      }
+
+      // Clean each text node
+      textNodes.forEach(textNode => {
+        let text = textNode.textContent || '';
+        // Replace non-breaking spaces with normal spaces
+        text = text.replace(/\u00A0/g, ' ');
+        // Remove soft hyphens
+        text = text.replace(/\u00AD/g, '');
+        // Remove zero-width characters
+        text = text.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+        textNode.textContent = text;
+      });
+
+      // Return the cleaned HTML
+      return doc.body?.innerHTML || doc.documentElement?.innerHTML || cleaned;
+    } catch (error) {
+      console.error('Error normalizing imported HTML:', error);
+      // Fall back to original if parsing fails
+      return raw;
+    }
   }
 }

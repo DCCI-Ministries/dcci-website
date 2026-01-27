@@ -1,0 +1,79 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+
+const canonicalUrl = absoluteUrl('/contact/');
+
+const seoData = {
+  title: 'Contact Us - DCCI Ministries',
+  description: 'Contact DCCI Ministries. Get in touch with us for content, theological, or technical inquiries. We welcome respectful questions and communication.',
+  canonicalUrl,
+  type: 'website' as const
+};
+
+const metaTags = generateMetaTags(seoData);
+const jsonLd = generateJSONLD(seoData);
+---
+
+<SiteLayout
+  title="Contact Us - DCCI Ministries"
+  description="Contact DCCI Ministries. Get in touch with us for content, theological, or technical inquiries. We welcome respectful questions and communication."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Contact Form</h2>
+      <p>For a better experience with our contact form and to access all features, visit our interactive site:</p>
+      <a href="/app/contact" class="cta-button">Open Interactive Site</a>
+    </div>
+
+    <h1>Contact Us</h1>
+
+    <div class="intro-text">
+      <p>We welcome respectful inquiries, questions, and communication.</p>
+      <p>Please use the appropriate contact below so your message reaches the right place.</p>
+    </div>
+
+    <section>
+      <h2>Content, Theological, or Ministry Inquiries</h2>
+      <p>For questions about teachings, articles, videos, theology, or the mission of DCCI Ministries:</p>
+      <div class="contact-info-box">
+        <p><strong>Email:</strong> <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Website, Technical, or Bug Reports</h2>
+      <p>For issues related to the website, accessibility, errors, or technical concerns:</p>
+      <div class="contact-info-box">
+        <p><strong>Email:</strong> <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
+      </div>
+    </section>
+
+    <section class="note-section">
+      <p><strong>Please note:</strong></p>
+      <p>DCCI Ministries does not provide medical, legal, or professional counseling services through this website.</p>
+      <p>We aim to respond to legitimate inquiries as reasonably and promptly as possible.</p>
+    </section>
+    <style>
+      .intro-text {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      .note-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </main>
+</SiteLayout>

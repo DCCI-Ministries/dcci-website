@@ -53,6 +53,7 @@ export function registerIonicons(): void {
     'settings-outline': i.settingsOutline,
     'server-outline': i.serverOutline,
     'analytics-outline': i.analyticsOutline,
+    'pie-chart-outline': i.pieChartOutline,
     'newspaper-outline': i.newspaperOutline,
     'people-outline': i.peopleOutline,
     'person-add-outline': i.personAddOutline,

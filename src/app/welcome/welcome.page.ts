@@ -73,6 +73,20 @@ export class WelcomePage implements OnInit, AfterViewInit, OnDestroy {
 
   async openMenu() {
     try {
+      // Blur any focused elements in the main content before opening menu
+      // This prevents aria-hidden warnings when Ionic sets aria-hidden on main content
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        const focusedElement = mainContent.querySelector(':focus') as HTMLElement;
+        if (focusedElement) {
+          focusedElement.blur();
+        }
+        // Also blur any active element that might be in the main content
+        if (document.activeElement && mainContent.contains(document.activeElement)) {
+          (document.activeElement as HTMLElement).blur();
+        }
+      }
+
       // Ensure menu is enabled
       await this.menuController.enable(true, 'main-menu');
 

@@ -3,62 +3,7 @@
  * Used only during Astro build time to fetch published articles
  */
 
-import { initializeApp, cert, getApps, App } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
-
-let firestoreInstance: Firestore | null = null;
-
-/**
- * Initialize Firebase Admin SDK
- * Uses service account credentials from environment variables or default credentials
- */
-function initializeFirebaseAdmin(): Firestore {
-  if (firestoreInstance) {
-    return firestoreInstance;
-  }
-
-  // Check if already initialized
-  const existingApp = getApps()[0];
-  if (existingApp) {
-    firestoreInstance = getFirestore(existingApp);
-    return firestoreInstance;
-  }
-
-  // Initialize with service account or default credentials
-  try {
-    // Option 1: Use service account key from environment variable
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      const app = initializeApp({
-        credential: cert(serviceAccount),
-        projectId: serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'dcci-ministries',
-      });
-      firestoreInstance = getFirestore(app);
-      return firestoreInstance;
-    }
-
-    // Option 2: Use GOOGLE_APPLICATION_CREDENTIALS environment variable (path to key file)
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      const app = initializeApp({
-        credential: cert(serviceAccount),
-        projectId: serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'dcci-ministries',
-      });
-      firestoreInstance = getFirestore(app);
-      return firestoreInstance;
-    }
-
-    // Option 3: Use default credentials (for Firebase Functions/Cloud Run)
-    const app = initializeApp({
-      projectId: process.env.FIREBASE_PROJECT_ID || 'dcci-ministries',
-    });
-    firestoreInstance = getFirestore(app);
-    return firestoreInstance;
-  } catch (error) {
-    console.error('Error initializing Firebase Admin:', error);
-    throw new Error('Failed to initialize Firebase Admin SDK. Please set FIREBASE_SERVICE_ACCOUNT_KEY or GOOGLE_APPLICATION_CREDENTIALS environment variable.');
-  }
-}
+import { getFirestoreAdmin } from './firebaseAdmin';
 
 /**
  * Article interface matching Firestore schema
@@ -84,7 +29,7 @@ export interface Article {
  * Get all published articles
  */
 export async function getPublishedArticles(): Promise<Article[]> {
-  const db = initializeFirebaseAdmin();
+  const db = getFirestoreAdmin();
   
   try {
     const articlesRef = db.collection('content');
@@ -163,7 +108,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
  * Also checks oldSlugs for redirects
  */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const db = initializeFirebaseAdmin();
+  const db = getFirestoreAdmin();
   
   try {
     // First, try to find by current slug

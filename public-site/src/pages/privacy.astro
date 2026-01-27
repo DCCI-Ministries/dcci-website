@@ -1,0 +1,209 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+
+const canonicalUrl = absoluteUrl('/privacy/');
+
+const seoData = {
+  title: 'Privacy Policy - DCCI Ministries',
+  description: 'Privacy Policy for DCCI Ministries. Learn how we collect, use, and protect your personal information. We respect your privacy and do not sell personal data.',
+  canonicalUrl,
+  type: 'website' as const
+};
+
+const metaTags = generateMetaTags(seoData);
+const jsonLd = generateJSONLD(seoData);
+---
+
+<SiteLayout
+  title="Privacy Policy - DCCI Ministries"
+  description="Privacy Policy for DCCI Ministries. Learn how we collect, use, and protect your personal information. We respect your privacy and do not sell personal data."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+    <div class="cta-box">
+      <h2>Use the Interactive Site</h2>
+      <p>For the full interactive experience and to access all features, visit our interactive site:</p>
+      <a href="/app/welcome" class="cta-button">Open Interactive Site</a>
+    </div>
+
+    <h1>Privacy Policy</h1>
+
+    <div class="organization-info">
+      <p><strong>DCCI Ministries</strong></p>
+      <p class="last-updated">Last updated: January 2026</p>
+    </div>
+
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      .data-category {
+        margin: 1.5rem 0;
+      }
+    </style>
+
+			<section>
+				<h2>1. WHO WE ARE</h2>
+				<p>DCCI Ministries ("we," "us," or "our") operates the website <a href="https://dcciministries.com" target="_blank" rel="noopener noreferrer">https://dcciministries.com</a>.</p>
+				<p>We are a Christian ministry based primarily in the United Kingdom, with collaborators and technical administration in the United States.</p>
+
+				<div class="contact-info-box">
+					<p><strong>CONTACT INFORMATION</strong></p>
+					<ul>
+						<li><strong>Privacy, content, or theological inquiries:</strong><br>
+							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+						<li><strong>Website, technical, or bug reports:</strong><br>
+							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+					</ul>
+				</div>
+			</section>
+
+			<section>
+				<h2>2. OUR COMMITMENT TO PRIVACY</h2>
+				<p>We respect the privacy of our visitors and supporters. We collect only the data necessary to operate this ministry website, communicate with users, and protect the site from abuse.</p>
+				<p>We do not sell personal data.</p>
+			</section>
+
+			<section>
+				<h2>3. WHAT DATA WE COLLECT</h2>
+				<p>Depending on how you interact with the site, we may collect the following:</p>
+
+				<div class="data-category">
+					<h3>A. INFORMATION YOU PROVIDE VOLUNTARILY</h3>
+					<ul>
+						<li>Name and email address (contact forms, newsletter signup)</li>
+						<li>Account information (when user accounts and comments are enabled)</li>
+						<li>Messages you send to us</li>
+					</ul>
+				</div>
+
+				<div class="data-category">
+					<h3>B. AUTOMATICALLY COLLECTED INFORMATION</h3>
+					<ul>
+						<li>IP address</li>
+						<li>Browser and device information</li>
+						<li>Cookies and similar technologies</li>
+						<li>Interaction data related to embedded media (such as YouTube videos)</li>
+					</ul>
+				</div>
+			</section>
+
+			<section>
+				<h2>4. COOKIES AND EMBEDDED CONTENT</h2>
+				<p>This website uses cookies for:</p>
+				<ul>
+					<li>Basic site functionality and security</li>
+					<li>Spam prevention and rate limiting</li>
+					<li>Embedded third-party content (such as YouTube videos)</li>
+				</ul>
+				<p>Embedded YouTube videos may collect data as if you visited YouTube directly. This is governed by Google's privacy policies.</p>
+				<p>By using this site, you acknowledge the use of cookies required for functionality and embedded media.</p>
+			</section>
+
+			<section>
+				<h2>5. THIRD-PARTY SERVICES</h2>
+				<p>We use or plan to use the following services:</p>
+				<ul>
+					<li><strong>Hosting & infrastructure:</strong> Firebase (Google)</li>
+					<li><strong>Embedded media:</strong> YouTube (Google)</li>
+					<li><strong>Analytics (planned):</strong> Google Analytics / Firebase Analytics</li>
+					<li><strong>Spam protection:</strong> reCAPTCHA, honeypots, rate limiting</li>
+					<li><strong>Donations (external):</strong>
+						<ul>
+							<li>PayPal</li>
+							<li>Patreon</li>
+							<li>Cash App</li>
+						</ul>
+					</li>
+				</ul>
+				<p>Donations are processed on third-party platforms and are governed by their respective privacy policies. We do not store payment details on our servers.</p>
+			</section>
+
+			<section>
+				<h2>6. USER ACCOUNTS AND COMMENTS</h2>
+				<p>User accounts and comments are planned features but are not currently available to the general public.</p>
+				<p>When comments are enabled:</p>
+				<ul>
+					<li>Account data will be limited to what is necessary for participation</li>
+					<li>Comments may be moderated</li>
+					<li>Abuse, harassment, or spam will not be tolerated</li>
+				</ul>
+				<p>A separate Comment Policy will apply at that time.</p>
+			</section>
+
+			<section>
+				<h2>7. HOW WE USE DATA</h2>
+				<p>We use collected data to:</p>
+				<ul>
+					<li>Respond to messages and inquiries</li>
+					<li>Send newsletters (if you opt in)</li>
+					<li>Maintain site security and performance</li>
+					<li>Improve the website and its content</li>
+					<li>Moderate future comments or community features</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>8. DATA RETENTION</h2>
+				<p>We retain personal data only as long as necessary:</p>
+				<ul>
+					<li>Contact emails are kept for correspondence records</li>
+					<li>Newsletter data is retained until you unsubscribe</li>
+					<li>Technical logs are retained for security and troubleshooting</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>9. YOUR RIGHTS (UK GDPR / EU GDPR)</h2>
+				<p>If you are located in the UK or EU, you have the right to:</p>
+				<ul>
+					<li>Request access to the personal data we hold about you (read-only access)</li>
+				</ul>
+				<p>At this time, requests for correction or deletion may be limited depending on technical constraints, but we will respond in good faith to all legitimate inquiries.</p>
+
+				<div class="contact-info-box">
+					<p><strong>TO MAKE A REQUEST, CONTACT:</strong><br>
+					<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+				</div>
+			</section>
+
+			<section>
+				<h2>10. CHILDREN'S PRIVACY</h2>
+				<p>This website is intended for adults.</p>
+				<p>We do not knowingly collect personal data from children under 13.</p>
+			</section>
+
+			<section>
+				<h2>11. CHANGES TO THIS POLICY</h2>
+				<p>We may update this Privacy Policy as the site grows or new features are added. The "Last updated" date will always reflect the most recent revision.</p>
+			</section>
+
+			<section>
+				<h2>12. CONTACT US</h2>
+				<p>For questions about this Privacy Policy or how your data is handled:</p>
+				<div class="contact-info-box">
+					<ul>
+						<li><strong>Theological / content inquiries:</strong><br>
+							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+						<li><strong>Website, technical, or bug reports:</strong><br>
+							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+					</ul>
+				</div>
+    </section>
+  </main>
+</SiteLayout>

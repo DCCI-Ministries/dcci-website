@@ -175,8 +175,8 @@ export class AuthService {
           const failedAttempts = await this.getFailedAttempts(sanitizedEmail);
           if (failedAttempts && failedAttempts.lockedUntil && failedAttempts.lockedUntil > new Date()) {
             const lockTimeRemaining = Math.ceil((failedAttempts.lockedUntil.getTime() - new Date().getTime()) / (1000 * 60));
-            return { 
-              success: false, 
+            return {
+              success: false,
               message: `🔒 Account locked for ${lockTimeRemaining} minutes due to 3 failed login attempts. For security, you must reset your password to regain access.`,
               isLocked: true
             };
@@ -209,7 +209,7 @@ export class AuthService {
               // If sending fails, continue anyway - user can resend from verification page
               console.error('Error sending verification email:', verifyError);
             }
-            
+
             // Sign out and return error
             await this.signOut();
             return { success: false, message: 'Please verify your email first. A verification email has been sent.', needsVerification: true };
@@ -238,10 +238,10 @@ export class AuthService {
         } catch (error: any) {
           console.error('Sign in error (inner catch):', error);
           console.error('Error code:', error.code);
-          
+
           // Record failed attempt
           await this.recordFailedAttempt(email);
-          
+
           const errorMessage = this.getErrorMessage(error.code);
           console.log('Generated error message:', errorMessage);
           return { success: false, message: errorMessage };
@@ -260,7 +260,7 @@ export class AuthService {
     try {
       await signOut(this.auth);
       this.currentUserSubject.next(null);
-      this.router.navigate(['/home']);
+      this.router.navigate(['/welcome']);
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -278,7 +278,7 @@ export class AuthService {
 
           if (userDoc.exists()) {
             const userData = userDoc.data() as AdminUser;
-            
+
             // Convert Firestore Timestamps to JavaScript Dates
             if (userData.createdAt && (userData.createdAt as any).toDate) {
               userData.createdAt = (userData.createdAt as any).toDate();
@@ -286,7 +286,7 @@ export class AuthService {
             if (userData.lastLoginAt && (userData.lastLoginAt as any).toDate) {
               userData.lastLoginAt = (userData.lastLoginAt as any).toDate();
             }
-            
+
             this.currentUserSubject.next(userData);
             return userData;
           } else {
@@ -317,13 +317,13 @@ export class AuthService {
       return await this.ngZone.run(async () => {
         try {
           let user = this.auth.currentUser;
-          
+
           // If no user is logged in but email/password provided, sign in temporarily
           if (!user && email && password) {
             try {
               const credential = await signInWithEmailAndPassword(this.auth, email, password);
               user = credential.user;
-              
+
               // Configure action code settings
               const actionCodeSettings: ActionCodeSettings = {
                 url: `https://dcciministries.com/auth/action?uid=${encodeURIComponent(user.uid)}&verified=1`,
@@ -331,10 +331,10 @@ export class AuthService {
               };
 
               await sendEmailVerification(user, actionCodeSettings);
-              
+
               // Sign out after sending email
               await signOut(this.auth);
-              
+
               return { success: true, message: 'Verification email sent! Please check your inbox.' };
             } catch (signInError: any) {
               // If sign-in fails, return appropriate error
@@ -347,7 +347,7 @@ export class AuthService {
               return { success: false, message: this.getErrorMessage(signInError.code) };
             }
           }
-          
+
           // If no user and no credentials provided
           if (!user) {
             return { success: false, message: 'Please provide your email and password to resend the verification email, or sign in first.' };
@@ -364,12 +364,12 @@ export class AuthService {
           return { success: true, message: 'Verification email sent! Please check your inbox.' };
         } catch (error: any) {
           console.error('Send verification error:', error);
-          
+
           // Handle specific error cases
           if (error.code === 'auth/too-many-requests') {
             return { success: false, message: 'Too many requests. Please wait a few minutes before requesting another verification email.' };
           }
-          
+
           return { success: false, message: this.getErrorMessage(error.code) };
         }
       });
@@ -387,7 +387,7 @@ export class AuthService {
     try {
       // Apply the action code to verify the email in Firebase Auth
       await applyActionCode(this.auth, actionCode);
-      
+
       // If uid is provided, update Firestore immediately via Cloud Function
       // (User is not logged in, so we can't update Firestore directly due to security rules)
       if (uid) {
@@ -405,7 +405,7 @@ export class AuthService {
           // Don't fail verification - Firestore will be updated during sign-in
         }
       }
-      
+
       return { success: true, message: 'Email verified successfully!' };
     } catch (error: any) {
       // If already verified, that's fine - just return success
@@ -550,20 +550,20 @@ export class AuthService {
       await runInInjectionContext(this.injector, async () => {
       const failedAttemptsRef = doc(this.firestore, 'failedAttempts', email);
       const failedAttemptsDoc = await getDoc(failedAttemptsRef);
-      
+
       let attempts = 1;
       let lockedUntil: Date | undefined;
-      
+
       if (failedAttemptsDoc.exists()) {
         const data = failedAttemptsDoc.data() as FailedAttempt;
         attempts = data.attempts + 1;
-        
+
         // If this is the 3rd attempt, lock the account for 15 minutes
         if (attempts >= 3) {
           lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
         }
       }
-      
+
       await setDoc(failedAttemptsRef, {
         email,
         attempts,
@@ -585,7 +585,7 @@ export class AuthService {
       return await runInInjectionContext(this.injector, async () => {
       const failedAttemptsRef = doc(this.firestore, 'failedAttempts', email);
       const failedAttemptsDoc = await getDoc(failedAttemptsRef);
-      
+
       if (failedAttemptsDoc.exists()) {
         const data = failedAttemptsDoc.data() as FailedAttempt;
         // Convert Firestore timestamps to Date objects

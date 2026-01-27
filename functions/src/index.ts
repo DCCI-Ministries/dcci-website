@@ -228,14 +228,6 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
 
       // If they want newsletter updates, add to subscribers collection
       if (sanitizedNewsletter) {
-        const subscriberData = {
-          email: sanitizedEmail,
-          name: sanitizedName,
-          subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
-          source: 'contact_form',
-          status: 'active'
-        };
-
         // Check if email already exists in subscribers
         const existingSubscriber = await db.collection('subscribers')
           .where('email', '==', sanitizedEmail)
@@ -243,6 +235,19 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           .get();
 
         if (existingSubscriber.empty) {
+          // Generate unique unsubscribe token
+          const crypto = require('crypto');
+          const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+
+          const subscriberData = {
+            email: sanitizedEmail,
+            name: sanitizedName,
+            subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: 'contact_form',
+            status: 'active',
+            unsubscribeToken: unsubscribeToken
+          };
+
           await db.collection('subscribers').add(subscriberData);
           console.log('Added to newsletter subscribers:', sanitizedEmail);
         } else {
@@ -266,13 +271,12 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           to: recipientEmail,
           replyTo: `${sanitizedName} <${sanitizedEmail}>`,
           subject: `Contact Form: ${sanitizedSubject}`,
-          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nNewsletter: ${sanitizedNewsletter ? 'Yes' : 'No'}\nIP: ${clientIP}\n\n${sanitizedMessage}`,
+          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nIP: ${clientIP}\n\n${sanitizedMessage}`,
           html: `
             <h3>New Contact Form Submission</h3>
             <p><b>Name:</b> ${escapeHtmlForEmail(sanitizedName)}</p>
             <p><b>Email:</b> ${escapeHtmlForEmail(sanitizedEmail)}</p>
             <p><b>Subject:</b> ${escapeHtmlForEmail(sanitizedSubject)}</p>
-            <p><b>Newsletter Subscription:</b> ${sanitizedNewsletter ? 'Yes' : 'No'}</p>
             <p><b>IP Address:</b> ${escapeHtmlForEmail(clientIP)}</p>
             <hr>
             <p><b>Message:</b></p>
@@ -536,6 +540,10 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
         return;
       }
 
+      // Generate unique unsubscribe token
+      const crypto = require('crypto');
+      const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+
       // Add to subscribers collection
       const subscriberData = {
         email: sanitizedEmail,
@@ -544,28 +552,50 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
         source: 'newsletter_signup',
         status: 'active',
         ipAddress: clientIP,
-        userAgent: req.get('User-Agent') || 'Unknown'
+        userAgent: req.get('User-Agent') || 'Unknown',
+        unsubscribeToken: unsubscribeToken
       };
-
       const subscriberRef = await db.collection('subscribers').add(subscriberData);
       console.log('Newsletter subscription added with ID:', subscriberRef.id);
 
-      // Send email notification to admin
-      await tx.sendMail({
-        from: `"DCCI Ministries Website" <${user}>`,
-        to,
-        subject: `New Newsletter Subscription: ${sanitizedName}`,
-        text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nIP: ${clientIP}\n\nThis person subscribed to the newsletter through the standalone signup form.`,
-        html: `
-          <h3>New Newsletter Subscription</h3>
-          <p><b>Name:</b> ${escapeHtmlForEmail(sanitizedName)}</p>
-          <p><b>Email:</b> ${escapeHtmlForEmail(sanitizedEmail)}</p>
-          <p><b>IP Address:</b> ${escapeHtmlForEmail(clientIP)}</p>
-          <hr>
-          <p><small>This subscription was made through the standalone newsletter signup form.</small></p>
-          <p><small>Subscriber ID: ${subscriberRef.id}</small></p>
-        `
-      });
+      // Generate unsubscribe URL (works with both /unsubscribe and /app/unsubscribe via Firebase rewrites)
+      const siteUrl = functions.config().site?.url || 'https://dcciministries.com';
+      const unsubscribeUrl = `${siteUrl}/unsubscribe?token=${unsubscribeToken}&email=${encodeURIComponent(sanitizedEmail)}`;
+
+      // Send welcome email to subscriber (no admin notification)
+      try {
+        await tx.sendMail({
+          from: `"DCCI Ministries" <${user}>`,
+          to: sanitizedEmail,
+          replyTo: user,
+          subject: `Welcome to DCCI Ministries Newsletter`,
+          text: `Thank you for subscribing to the DCCI Ministries newsletter, ${sanitizedName}!
+
+We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.
+
+If you ever wish to unsubscribe, you can do so at any time by visiting:
+${unsubscribeUrl}
+
+Thank you for your interest in DCCI Ministries.
+
+In Christ,
+DCCI Ministries Team`,
+          html: `
+            <h2>Welcome to DCCI Ministries Newsletter</h2>
+            <p>Thank you for subscribing to the DCCI Ministries newsletter, <b>${escapeHtmlForEmail(sanitizedName)}</b>!</p>
+            <p>We're grateful you've chosen to stay connected with us. You'll receive updates about our ministry, articles, videos, and resources.</p>
+            <hr>
+            <p><strong>Unsubscribe:</strong> If you ever wish to unsubscribe, you can do so at any time by <a href="${unsubscribeUrl}">clicking here</a>.</p>
+            <hr>
+            <p>Thank you for your interest in DCCI Ministries.</p>
+            <p>In Christ,<br>DCCI Ministries Team</p>
+          `
+        });
+        console.log('Welcome email sent to subscriber:', sanitizedEmail);
+      } catch (emailError: any) {
+        console.error('Error sending welcome email to subscriber:', emailError.message);
+        // Don't fail the subscription if welcome email fails
+      }
 
       res.status(200).json({
         success: true,
@@ -575,6 +605,73 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
     } catch (e) {
       console.error('Newsletter subscription error:', e);
       res.status(500).json({ error: "Failed to process newsletter subscription" });
+    }
+  });
+});
+
+// Newsletter unsubscribe endpoint
+export const unsubscribeFromNewsletter = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== "POST" && req.method !== "GET") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    // Support both GET (for direct link clicks) and POST (for form submission)
+    const email = req.method === "GET" ? req.query.email : req.body?.email;
+    const token = req.method === "GET" ? req.query.token : req.body?.token;
+
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({
+        error: "Email required",
+        message: "Please provide your email address to unsubscribe."
+      });
+      return;
+    }
+
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    try {
+      // Find subscriber by email
+      const subscribersSnapshot = await db.collection('subscribers')
+        .where('email', '==', sanitizedEmail)
+        .limit(1)
+        .get();
+
+      if (subscribersSnapshot.empty) {
+        res.status(404).json({
+          error: "Not found",
+          message: "This email address is not subscribed to our newsletter."
+        });
+        return;
+      }
+
+      const subscriberDoc = subscribersSnapshot.docs[0];
+      const subscriberData = subscriberDoc.data();
+
+      // If token is provided, verify it matches
+      if (token && subscriberData.unsubscribeToken !== token) {
+        res.status(403).json({
+          error: "Invalid token",
+          message: "The unsubscribe link is invalid or has expired. Please enter your email address to unsubscribe."
+        });
+        return;
+      }
+
+      // Delete the subscriber
+      await subscriberDoc.ref.delete();
+      console.log('Subscriber unsubscribed:', sanitizedEmail);
+
+      res.status(200).json({
+        success: true,
+        message: "You have been successfully unsubscribed from the DCCI Ministries newsletter."
+      });
+    } catch (e) {
+      console.error('Unsubscribe error:', e);
+      res.status(500).json({
+        error: "Failed to process unsubscribe request",
+        message: "An error occurred while processing your unsubscribe request. Please try again later."
+      });
     }
   });
 });
@@ -2212,3 +2309,158 @@ export const updateEmailVerified = functions.https.onRequest(async (req, res) =>
 
 // Note: Auth triggers for email verification are not available in Firebase Functions v1
 // We rely on the updateEmailVerified HTTP Cloud Function being called from the client
+
+/**
+ * Firestore trigger: Automatically rebuild and redeploy Astro site when articles are published/updated
+ *
+ * Triggers on writes to /content/{articleId}
+ * Only rebuilds if:
+ * - status === 'published'
+ * - slug or content fields changed (or article was just published)
+ */
+export const onArticleUpdate = functions.firestore
+  .document('content/{articleId}')
+  .onWrite(async (change, context) => {
+    const articleId = context.params.articleId;
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.exists ? change.after.data() : null;
+
+    // Skip if document was deleted
+    if (!after) {
+      console.log(`Article ${articleId} was deleted. Skipping rebuild.`);
+      return null;
+    }
+
+    // Skip if not published
+    if (after.status !== 'published') {
+      console.log(`Article ${articleId} is not published (status: ${after.status}). Skipping rebuild.`);
+      return null;
+    }
+
+    // Check if this is a new publication or if slug/content changed
+    const isNewPublication = !before || before.status !== 'published';
+    const slugChanged = before && before.slug !== after.slug;
+    const contentChanged = before && before.content !== after.content;
+    const titleChanged = before && before.title !== after.title; // Title changes affect SEO
+
+    if (!isNewPublication && !slugChanged && !contentChanged && !titleChanged) {
+      console.log(`Article ${articleId} published but no relevant fields changed. Skipping rebuild.`);
+      return null;
+    }
+
+    console.log(`Article ${articleId} published/updated. Triggering rebuild...`);
+    console.log(`Changes: newPublication=${isNewPublication}, slugChanged=${slugChanged}, contentChanged=${contentChanged}, titleChanged=${titleChanged}`);
+
+    try {
+      // Option 1: Trigger GitHub Actions workflow (recommended)
+      const githubToken = functions.config().github?.token;
+      const githubRepo = functions.config().github?.repo; // Format: "owner/repo"
+      const githubWorkflow = functions.config().github?.workflow || 'rebuild-astro.yml';
+
+      if (githubToken && githubRepo) {
+        console.log(`Triggering GitHub Actions workflow: ${githubRepo}/${githubWorkflow}`);
+        await triggerGitHubActions(githubToken, githubRepo, githubWorkflow, articleId);
+        return null;
+      }
+
+      // Option 2: Direct Firebase Hosting deployment (fallback)
+      console.log('GitHub Actions not configured. Attempting direct Firebase Hosting deployment...');
+      await triggerFirebaseHostingDeploy(articleId);
+
+      return null;
+    } catch (error) {
+      console.error(`Error triggering rebuild for article ${articleId}:`, error);
+      // Don't throw - we don't want to retry indefinitely
+      return null;
+    }
+  });
+
+/**
+ * Trigger GitHub Actions workflow via repository_dispatch API
+ */
+async function triggerGitHubActions(
+  token: string,
+  repo: string,
+  workflow: string,
+  articleId: string
+): Promise<void> {
+  const https = require('https');
+  const url = require('url');
+
+  return new Promise((resolve, reject) => {
+    const [owner, repoName] = repo.split('/');
+    if (!owner || !repoName) {
+      throw new Error(`Invalid GitHub repo format: ${repo}. Expected "owner/repo"`);
+    }
+
+    // Option A: Use repository_dispatch (requires workflow_dispatch in workflow)
+    const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/dispatches`;
+
+    const payload = JSON.stringify({
+      event_type: 'rebuild-astro',
+      client_payload: {
+        articleId,
+        reason: 'article_published_or_updated',
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    const parsedUrl = url.parse(apiUrl);
+    const options = {
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.path,
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'Firebase-Cloud-Function',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, (res: any) => {
+      let data = '';
+      res.on('data', (chunk: any) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        if (res.statusCode === 204 || res.statusCode === 200) {
+          console.log(`✅ Successfully triggered GitHub Actions workflow for article ${articleId}`);
+          resolve();
+        } else {
+          console.error(`❌ GitHub API error: ${res.statusCode} - ${data}`);
+          reject(new Error(`GitHub API returned ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', (error: Error) => {
+      console.error('Error making GitHub API request:', error);
+      reject(error);
+    });
+
+    req.write(payload);
+    req.end();
+  });
+}
+
+/**
+ * Trigger Firebase Hosting deployment directly
+ * Note: This requires the Cloud Function to have Hosting Admin permissions
+ */
+async function triggerFirebaseHostingDeploy(articleId: string): Promise<void> {
+  // This approach requires using Firebase Admin SDK to trigger a deployment
+  // However, Firebase Hosting doesn't have a direct API for this.
+  // Instead, we'll use the Firebase CLI via a Cloud Build trigger or
+  // create an HTTP-triggered function that can be called with proper auth.
+
+  // For now, log that we need GitHub Actions or manual deployment
+  console.warn('Direct Firebase Hosting deployment not implemented. Please configure GitHub Actions.');
+  console.warn(`Article ${articleId} was published but deployment was not triggered.`);
+  console.warn('Please manually rebuild and deploy, or configure GitHub Actions workflow.');
+
+  // Alternative: You could create an HTTP Cloud Function that runs the build
+  // and deploy commands, but this requires more setup and security considerations.
+  throw new Error('Firebase Hosting direct deployment not configured. Use GitHub Actions instead.');
+}

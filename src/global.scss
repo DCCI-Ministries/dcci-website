@@ -36,3 +36,100 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 @import 'quill/dist/quill.snow.css';
+
+/**
+ * Enable text selection globally
+ * Ionic disables text selection by default, but we want content to be selectable
+ */
+
+/* Enable text selection for content areas */
+ion-content,
+ion-card,
+ion-item,
+ion-label,
+p,
+h1, h2, h3, h4, h5, h6,
+span,
+div:not([role="button"]):not([tabindex]),
+article,
+section,
+main,
+li,
+td,
+th {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Keep text selection disabled for interactive elements */
+ion-button,
+ion-icon,
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex],
+.youtube-filter-label,
+.filter-label {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/**
+ * Accessibility: Clear focus indicators for admin panel
+ * All buttons and links in admin pages get a prominent 5px success-colored border when focused
+ */
+ion-content[class*="admin"],
+[class*="admin"] ion-content,
+.admin-login-page,
+.dashboard-container,
+.settings-container,
+.emergency-controls-container,
+.maintenance-container,
+.manage-content-container,
+.user-management-container,
+.forgot-password-container,
+.reset-password-container,
+.verification-container {
+  ion-button,
+  button,
+  a,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+    }
+  }
+}
+
+// Also apply to all admin pages via route-based selector
+// This catches any page under /admin route
+app-admin ion-content {
+  ion-button,
+  button,
+  a,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    &:focus,
+    &:focus-visible {
+      --border-color: var(--ion-color-success) !important;
+      --border-width: 5px !important;
+      box-shadow: 0 0 0 5px var(--ion-color-success) !important;
+      outline: 5px solid var(--ion-color-success) !important;
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+    }
+  }
+}

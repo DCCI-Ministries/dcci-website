@@ -30,7 +30,7 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
   resendCooldown = 0;
   statusMessage: { success: boolean; message: string } | null = null;
   isLoggedIn = false;
-  
+
   private cooldownSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
 
@@ -43,11 +43,11 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
   ngOnInit() {
     // Get email from route parameters or query params
     this.userEmail = this.route.snapshot.queryParams['email'] || '';
-    
+
     // Check if user is logged in
       this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.isLoggedIn = !!user;
-      
+
         if (user) {
         // If user is logged in, use their email
         if (!this.userEmail) {
@@ -59,8 +59,8 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
         // User is verified and admin, redirect to dashboard
         this.router.navigate(['/admin/dashboard']);
         } else if (user.emailVerified && !user.isAdmin) {
-        // User is verified but not admin, redirect to home
-        this.router.navigate(['/home']);
+        // User is verified but not admin, redirect to welcome
+        this.router.navigate(['/welcome']);
         }
       } else {
         // No user logged in - if we have email from query params, that's fine
@@ -93,7 +93,7 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
       this.showSuccessState = false;
 
       let result;
-      
+
       // If user is logged in, use their session
       if (this.isLoggedIn) {
         result = await this.authService.sendEmailVerification();
@@ -111,17 +111,17 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
         this.router.navigate(['/admin/login']);
         return;
       }
-      
+
       this.statusMessage = result;
-      
+
       if (result.success) {
         this.showSuccessState = true;
         this.startResendCooldown();
       }
     } catch (error) {
-      this.statusMessage = { 
-        success: false, 
-        message: 'An unexpected error occurred. Please try again.' 
+      this.statusMessage = {
+        success: false,
+        message: 'An unexpected error occurred. Please try again.'
       };
       console.error('Resend verification error:', error);
     } finally {
@@ -131,10 +131,10 @@ export class VerificationRequiredPage implements OnInit, OnDestroy {
 
   private startResendCooldown() {
     this.resendCooldown = 60; // 60 seconds cooldown
-    
+
     this.cooldownSubscription = interval(1000).subscribe(() => {
       this.resendCooldown--;
-      
+
       if (this.resendCooldown <= 0) {
         this.cooldownSubscription.unsubscribe();
       }

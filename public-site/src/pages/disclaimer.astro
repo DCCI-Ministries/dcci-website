@@ -1,0 +1,116 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+
+const canonicalUrl = absoluteUrl('/disclaimer/');
+
+const seoData = {
+  title: 'Disclaimer - DCCI Ministries',
+  description: 'Disclaimer for DCCI Ministries website. Information about the nature of our content and limitations.',
+  canonicalUrl,
+  type: 'website' as const
+};
+
+const metaTags = generateMetaTags(seoData);
+const jsonLd = generateJSONLD(seoData);
+---
+
+<SiteLayout
+  title="Disclaimer - DCCI Ministries"
+  description="Disclaimer for DCCI Ministries website. Information about the nature of our content and limitations."
+  metaTags={metaTags}
+  jsonLd={jsonLd}
+>
+  <main>
+			<h1>DISCLAIMER</h1>
+
+			<div class="organization-info">
+				<p><strong>DCCI Ministries</strong></p>
+				<p class="last-updated">Last updated: January 2026</p>
+			</div>
+
+			<div class="intro-text">
+				<p>The content provided on <a href="https://dcciministries.com" target="_blank" rel="noopener noreferrer">https://dcciministries.com</a> is offered for religious, educational, and informational purposes only.</p>
+			</div>
+
+			<section>
+				<h2>1. FAITH-BASED CONTENT</h2>
+				<p>All articles, videos, teachings, testimonies, and commentary reflect Christian religious beliefs and perspectives. Content represents the views of DCCI Ministries and its contributors and is intended to encourage discussion, learning, and reflection within a faith-based context.</p>
+			</section>
+
+			<section>
+				<h2>2. NO PROFESSIONAL ADVICE</h2>
+				<p>Nothing on this website should be considered:</p>
+				<ul>
+					<li>Medical advice</li>
+					<li>Mental health or counseling advice</li>
+					<li>Legal advice</li>
+					<li>Financial or professional advice</li>
+				</ul>
+				<p>Always seek qualified professionals for matters requiring professional judgment.</p>
+			</section>
+
+			<section>
+				<h2>3. APOLOGETICS AND RELIGIOUS CRITIQUE</h2>
+				<p>Some content on this site includes:</p>
+				<ul>
+					<li>Religious critique</li>
+					<li>Apologetics</li>
+					<li>Comparative religion discussion</li>
+					<li>Analysis of beliefs, texts, or doctrines</li>
+				</ul>
+				<p>Such content is presented for educational and religious discussion purposes and is not intended to harass, threaten, or incite hatred toward individuals or groups.</p>
+			</section>
+
+			<section>
+				<h2>4. PERSONAL TESTIMONY</h2>
+				<p>Testimonies and personal experiences shared on this site are individual accounts. They are not guarantees of outcomes for others and should not be interpreted as universal promises or prescriptions.</p>
+			</section>
+
+			<section>
+				<h2>5. EXTERNAL CONTENT AND LINKS</h2>
+				<p>This website may contain links to or embedded content from third-party platforms (such as YouTube, PayPal, Patreon, or Cash App). DCCI Ministries is not responsible for the content, policies, or practices of external sites.</p>
+			</section>
+
+			<section>
+				<h2>6. LIMITATION OF LIABILITY</h2>
+				<p>Use of this website and its content is at your own discretion and risk. DCCI Ministries shall not be held liable for any loss, harm, or misunderstanding resulting from the use or interpretation of information on this site.</p>
+			</section>
+
+			<section>
+				<h2>7. CONTACT</h2>
+				<p>For questions or concerns regarding this Disclaimer:</p>
+				<div class="contact-info-box">
+					<ul>
+						<li><strong>Content or theological inquiries:</strong><br>
+							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+						<li><strong>Website or technical issues:</strong><br>
+							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+					</ul>
+				</div>
+    </section>
+
+    <style>
+      .organization-info {
+        margin-bottom: 2rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #666;
+      }
+
+      .intro-text {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+
+      .contact-info-box {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+    </style>
+  </main>
+</SiteLayout>

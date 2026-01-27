@@ -95,7 +95,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       // Redirect if user is not admin/moderator or not verified
       if (!user || !user.isAdmin || !user.emailVerified ||
           (user.userRole !== 'Admin' && user.userRole !== 'Moderator')) {
-        this.router.navigate(['/home']);
+        this.router.navigate(['/welcome']);
       }
     });
 
@@ -182,10 +182,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     try {
       const activities: ActivityItem[] = [];
 
-      // Load activities within injection context
-      await runInInjectionContext(this.injector, async () => {
-        // 1. Get recently published content (last 5 items)
-        try {
+      // 1. Get recently published content (last 5 items)
+      try {
+        const publishedSnapshot = await runInInjectionContext(this.injector, async () => {
           const contentRef = collection(this.firestore, 'content');
           const publishedContentQuery = query(
             contentRef,
@@ -193,9 +192,10 @@ export class DashboardPage implements OnInit, OnDestroy {
             orderBy('publishedAt', 'desc'),
             limit(5)
           );
-          const publishedSnapshot = await getDocs(publishedContentQuery);
+          return await getDocs(publishedContentQuery);
+        });
 
-          publishedSnapshot.forEach((doc) => {
+        publishedSnapshot.forEach((doc) => {
             const content = doc.data() as any;
             const timestamp = content.publishedAt || content.createdAt;
             if (timestamp) {
@@ -212,13 +212,15 @@ export class DashboardPage implements OnInit, OnDestroy {
           console.error('Error loading published content activities:', error);
           // Fallback: try to get published content without orderBy
           try {
-            const contentRef = collection(this.firestore, 'content');
-            const publishedQuery = query(
-              contentRef,
-              where('status', '==', 'published'),
-              limit(10)
-            );
-            const publishedSnapshot = await getDocs(publishedQuery);
+            const publishedSnapshot = await runInInjectionContext(this.injector, async () => {
+              const contentRef = collection(this.firestore, 'content');
+              const publishedQuery = query(
+                contentRef,
+                where('status', '==', 'published'),
+                limit(10)
+              );
+              return await getDocs(publishedQuery);
+            });
             const publishedArray = publishedSnapshot.docs
               .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
               .filter((item: any) => item.publishedAt || item.createdAt)
@@ -248,15 +250,17 @@ export class DashboardPage implements OnInit, OnDestroy {
           }
         }
 
-        // 2. Get recent contact form submissions (last 5)
-        try {
+      // 2. Get recent contact form submissions (last 5)
+      try {
+        const contactsSnapshot = await runInInjectionContext(this.injector, async () => {
           const contactsRef = collection(this.firestore, 'contacts');
           const contactsQuery = query(
             contactsRef,
             orderBy('submittedAt', 'desc'),
             limit(5)
           );
-          const contactsSnapshot = await getDocs(contactsQuery);
+          return await getDocs(contactsQuery);
+        });
 
           contactsSnapshot.forEach((doc) => {
             const data = doc.data() as any;
@@ -274,8 +278,10 @@ export class DashboardPage implements OnInit, OnDestroy {
           console.error('Error loading contact form activities:', error);
           // If submittedAt field doesn't exist or isn't indexed, try without orderBy
           try {
-            const contactsRef = collection(this.firestore, 'contacts');
-            const contactsSnapshot = await getDocs(contactsRef);
+            const contactsSnapshot = await runInInjectionContext(this.injector, async () => {
+              const contactsRef = collection(this.firestore, 'contacts');
+              return await getDocs(contactsRef);
+            });
             const contactsArray = contactsSnapshot.docs
               .map(doc => {
                 const docData = doc.data() as any;
@@ -307,15 +313,17 @@ export class DashboardPage implements OnInit, OnDestroy {
           }
         }
 
-        // 3. Get recent newsletter subscriptions (last 5)
-        try {
+      // 3. Get recent newsletter subscriptions (last 5)
+      try {
+        const subscribersSnapshot = await runInInjectionContext(this.injector, async () => {
           const subscribersRef = collection(this.firestore, 'subscribers');
           const subscribersQuery = query(
             subscribersRef,
             orderBy('subscribedAt', 'desc'),
             limit(5)
           );
-          const subscribersSnapshot = await getDocs(subscribersQuery);
+          return await getDocs(subscribersQuery);
+        });
 
           subscribersSnapshot.forEach((doc) => {
             const data = doc.data() as any;
@@ -333,8 +341,10 @@ export class DashboardPage implements OnInit, OnDestroy {
           console.error('Error loading newsletter subscription activities:', error);
           // If subscribedAt field doesn't exist or isn't indexed, try without orderBy
           try {
-            const subscribersRef = collection(this.firestore, 'subscribers');
-            const subscribersSnapshot = await getDocs(subscribersRef);
+            const subscribersSnapshot = await runInInjectionContext(this.injector, async () => {
+              const subscribersRef = collection(this.firestore, 'subscribers');
+              return await getDocs(subscribersRef);
+            });
             const subscribersArray = subscribersSnapshot.docs
               .map(doc => {
                 const docData = doc.data() as any;
@@ -366,8 +376,9 @@ export class DashboardPage implements OnInit, OnDestroy {
           }
         }
 
-        // 4. Get recently created/updated drafts (last 3)
-        try {
+      // 4. Get recently created/updated drafts (last 3)
+      try {
+        const draftsSnapshot = await runInInjectionContext(this.injector, async () => {
           const contentRef = collection(this.firestore, 'content');
           const draftsQuery = query(
             contentRef,
@@ -375,7 +386,8 @@ export class DashboardPage implements OnInit, OnDestroy {
             orderBy('updatedAt', 'desc'),
             limit(3)
           );
-          const draftsSnapshot = await getDocs(draftsQuery);
+          return await getDocs(draftsQuery);
+        });
 
           draftsSnapshot.forEach((doc) => {
             const content = doc.data() as any;
@@ -393,13 +405,15 @@ export class DashboardPage implements OnInit, OnDestroy {
           console.error('Error loading draft activities:', error);
           // Fallback: try to get drafts without orderBy
           try {
-            const contentRef = collection(this.firestore, 'content');
-            const draftsQuery = query(
-              contentRef,
-              where('status', '==', 'draft'),
-              limit(10)
-            );
-            const draftsSnapshot = await getDocs(draftsQuery);
+            const draftsSnapshot = await runInInjectionContext(this.injector, async () => {
+              const contentRef = collection(this.firestore, 'content');
+              const draftsQuery = query(
+                contentRef,
+                where('status', '==', 'draft'),
+                limit(10)
+              );
+              return await getDocs(draftsQuery);
+            });
             const draftsArray = draftsSnapshot.docs
               .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
               .filter((item: any) => item.updatedAt || item.createdAt)
@@ -427,7 +441,6 @@ export class DashboardPage implements OnInit, OnDestroy {
             console.error('Error loading draft activities (fallback):', fallbackError);
           }
         }
-      });
 
       // Sort all activities by timestamp (most recent first) and limit to 10
       activities.sort((a, b) => {
@@ -645,11 +658,11 @@ export class DashboardPage implements OnInit, OnDestroy {
   async logout() {
     try {
       await this.authService.signOut();
-      this.router.navigate(['/home']);
+      this.router.navigate(['/welcome']);
     } catch (error) {
       console.error('Logout error:', error);
       // Force redirect even if logout fails
-      this.router.navigate(['/home']);
+      this.router.navigate(['/welcome']);
     }
   }
 }

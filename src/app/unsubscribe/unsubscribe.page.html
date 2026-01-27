@@ -1,0 +1,74 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Unsubscribe from Newsletter</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="unsubscribe-container">
+    <ion-card *ngIf="!isSuccess && !isError">
+      <ion-card-header>
+        <ion-card-title>Unsubscribe from Newsletter</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>To unsubscribe from the DCCI Ministries newsletter, please enter your email address below.</p>
+        
+        <form (ngSubmit)="unsubscribe()" class="unsubscribe-form">
+          <ion-input
+            type="email"
+            label="Email Address"
+            labelPlacement="stacked"
+            placeholder="your.email@example.com"
+            [(ngModel)]="email"
+            name="email"
+            required
+            [disabled]="isSubmitting"
+            class="ion-margin-bottom"
+          ></ion-input>
+
+          <ion-button
+            type="submit"
+            expand="block"
+            [disabled]="isSubmitting || !email.trim()"
+            class="ion-margin-top"
+          >
+            <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+            <ion-icon *ngIf="!isSubmitting" name="mail-outline" slot="start"></ion-icon>
+            {{ isSubmitting ? 'Unsubscribing...' : 'Unsubscribe' }}
+          </ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="isSuccess" color="success">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="checkmark-circle" color="success"></ion-icon>
+          Successfully Unsubscribed
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ successMessage }}</p>
+        <p>We're sorry to see you go. If you change your mind, you can always subscribe again through our website.</p>
+        <ion-button expand="block" fill="outline" (click)="router.navigate(['/welcome'])">
+          Return to Home
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="isError" color="danger">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="alert-circle" color="danger"></ion-icon>
+          Error
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ errorMessage }}</p>
+        <ion-button expand="block" fill="outline" (click)="isError = false; errorMessage = ''">
+          Try Again
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

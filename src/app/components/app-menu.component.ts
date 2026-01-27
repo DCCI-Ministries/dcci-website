@@ -65,6 +65,22 @@ export class AppMenuComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  onMenuWillOpen() {
+    // Blur any focused elements in the main content before menu opens
+    // This prevents aria-hidden warnings when Ionic sets aria-hidden on main content
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      const focusedElement = mainContent.querySelector(':focus') as HTMLElement;
+      if (focusedElement) {
+        focusedElement.blur();
+      }
+      // Also blur any active element that might be in the main content
+      if (document.activeElement && mainContent.contains(document.activeElement)) {
+        (document.activeElement as HTMLElement).blur();
+      }
+    }
+  }
+
   onMenuOpen() {
     // Focus the close button when menu opens (accessibility best practice)
     setTimeout(() => {

@@ -47,13 +47,15 @@ You need to set up Gmail credentials for sending emails. **Important:** Use an A
 
 #### Set Firebase Config:
 ```bash
-# Set sender email credentials
-firebase functions:config:set email.user="your-email@gmail.com"
-firebase functions:config:set email.pass="your-app-password"
+# Set sender email credentials (Gmail / Google Workspace)
+firebase functions:config:set mail.user="your-email@gmail.com"
+firebase functions:config:set mail.pass="your-app-password"
 
-# Set recipient email (optional - defaults to environment config)
-firebase functions:config:set contact.email="admin@accessiblewebmedia.com"
+# Set recipient email — who receives contact form submissions (see "Email Routing" below)
+firebase functions:config:set mail.to="admin@accessiblewebmedia.com"
 ```
+
+**Note:** The code reads `mail.user`, `mail.pass`, and `mail.to` from Firebase config (see `functions/src/index.ts`). There is no `contact.email` — use `mail.to` for the recipient.
 
 ### Step 3: Build and Deploy Functions
 ```bash
@@ -106,10 +108,33 @@ Visit: `https://[region]-[project-id].cloudfunctions.net/testContactForm`
 ## Email Configuration
 
 ### Recipient Email Addresses
-The contact form sends emails to different addresses based on the environment:
+The contact form sends all submissions to a **single** recipient configured in Firebase:
 
-- **Development/Staging**: `admin@accessiblewebmedia.com` (for testing)
-- **Production**: `hatun@dcciministries.com` (live)
+- **Config key:** `mail.to` (set via `firebase functions:config:set mail.to="..."`)
+- There is no per-environment recipient in code — you control it by what you set in Firebase config for each project/environment.
+
+Typical choices:
+
+- **Development/Staging**: e.g. `admin@accessiblewebmedia.com` (your own inbox for testing)
+- **Production**: Either the real recipient (e.g. `hatun@dcciministries.com`) or, for the “shield” setup below, the monitor’s inbox
+
+### Email Routing: Shield / Monitor Setup
+
+Contact form emails are sent by **Firebase Cloud Functions** using **Gmail SMTP** (nodemailer). The recipient is whatever you set in `mail.to`. Routing happens entirely in Firebase + Gmail; Cloudflare (if used) is in front of the website only, not in the email path.
+
+**Current design (shield for the real recipient):**  
+Emails are routed to an **admin/monitor inbox** (e.g. `admin@accessiblewebmedia.com`) instead of the real recipient’s personal address. That way:
+
+- The monitor can review submissions for spam/scams before anything reaches the real recipient.
+- The real recipient’s email stays private and is not exposed on the public form or in logs.
+
+This is often combined with **Google Workspace** for the monitor inbox (labels, filters, forwarding rules, etc.). The actual “where it goes” is still controlled by `mail.to` in Firebase config.
+
+**Options for future developers:**
+
+1. **Remove the shield** — Send straight to the real recipient: set `mail.to` to their address (e.g. `hatun@dcciministries.com`), redeploy functions, and optionally remove or simplify any forwarding rules in Google Workspace.
+2. **Keep monitoring, different monitor** — Route to your own email: set `mail.to` to your inbox, redeploy, and use your own filters/forwarding.
+3. **Change in code** — To support multiple recipients, env-specific recipients, or more complex logic, edit `functions/src/index.ts` (the `submitContactForm` handler). The recipient is currently `const to = functions.config().mail.to`; you can replace or extend that with your own logic and redeploy.
 
 ### Email Format
 When someone submits the contact form, the configured recipient will receive an email with:

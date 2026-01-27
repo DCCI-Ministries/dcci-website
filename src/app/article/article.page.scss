@@ -200,6 +200,9 @@
   line-height: 1.75;
   color: var(--ion-color-dark-shade);
   padding: 0 3rem 2rem 3rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 
   // Style common HTML elements
   p {
@@ -242,6 +245,11 @@
     margin: 1.5rem 0;
     font-style: italic;
     color: var(--ion-color-medium);
+  }
+
+  pre, code {
+    overflow-x: auto;
+    white-space: pre;
   }
 }
 

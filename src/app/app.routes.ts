@@ -9,14 +9,14 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/maintenance/maintenance.page').then((m) => m.MaintenancePage)
   },
   {
-    path: 'home',
-    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
-    canActivate: [maintenanceGuard]
+    path: '',
+    redirectTo: 'welcome',
+    pathMatch: 'full',
   },
   {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full',
+    path: 'home',
+    redirectTo: 'welcome',
+    pathMatch: 'full'
   },
   {
     path: 'welcome',
@@ -156,6 +156,11 @@ export const routes: Routes = [
   {
     path: 'accessibility',
     loadComponent: () => import('./accessibility/accessibility.page').then( m => m.AccessibilityPage),
+    canActivate: [maintenanceGuard]
+  },
+  {
+    path: 'unsubscribe',
+    loadComponent: () => import('./unsubscribe/unsubscribe.page').then( m => m.UnsubscribePage),
     canActivate: [maintenanceGuard]
   },
 

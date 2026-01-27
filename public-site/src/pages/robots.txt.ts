@@ -7,13 +7,25 @@ Allow: /
 Allow: /welcome/
 Allow: /articles/
 Allow: /articles/*
+Allow: /privacy/
+Allow: /terms/
+Allow: /disclaimer/
+Allow: /accessibility/
+Allow: /contact/
 
-# Disallow admin routes
+# Disallow admin routes (Ionic SPA)
 Disallow: /admin/
 Disallow: /admin/*
 
+# Disallow app routes (Ionic SPA - use Astro SEO pages instead)
+Disallow: /app/
+Disallow: /app/*
+
 # Disallow API routes (if any)
 Disallow: /api/
+
+# Disallow report-problem (internal tool)
+Disallow: /report-problem/
 
 # Sitemap location
 Sitemap: ${absoluteUrl('/sitemap.xml')}
