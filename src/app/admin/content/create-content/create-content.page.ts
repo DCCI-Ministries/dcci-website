@@ -181,6 +181,77 @@ export class CreateContentPage implements OnInit {
     // We'll handle video embedding in onEditorCreated
   }
 
+  /**
+   * Clean up excessive line breaks in Quill Delta content for archive mode
+   * Removes excessive consecutive line breaks while preserving intentional ones (after headings, lists, etc.)
+   * Only used when isArchiveMode is true
+   */
+  private cleanArchiveContentLineBreaks(deltaContent: string): string {
+    try {
+      const delta = JSON.parse(deltaContent);
+      if (!delta || !delta.ops || !Array.isArray(delta.ops)) {
+        return deltaContent; // Return original if invalid format
+      }
+
+      const cleanedOps: any[] = [];
+      let consecutiveNewlines = 0;
+
+      for (let i = 0; i < delta.ops.length; i++) {
+        const op = delta.ops[i];
+        const insert = op.insert;
+        
+        // Check if this op contains line breaks
+        if (typeof insert === 'string') {
+          const hasAttributes = op.attributes && Object.keys(op.attributes).length > 0;
+          
+          // If this op has attributes (header, list, blockquote, etc.), always keep it
+          if (hasAttributes) {
+            // Reset counter and add the op - these are intentional formatting
+            consecutiveNewlines = 0;
+            cleanedOps.push(op);
+          } else if (insert === '\n') {
+            // Single newline op - count consecutive ones
+            consecutiveNewlines++;
+            
+            // Keep max 2 consecutive plain line breaks (for paragraph spacing)
+            if (consecutiveNewlines <= 2) {
+              cleanedOps.push(op);
+            }
+            // Otherwise skip this excessive line break
+          } else if (insert.includes('\n')) {
+            // Text with embedded newlines - clean them up
+            // Replace 3+ consecutive newlines with max 2
+            const cleanedInsert = insert.replace(/\n{3,}/g, '\n\n');
+            
+            if (cleanedInsert !== insert) {
+              // Only update if we changed something
+              cleanedOps.push({ ...op, insert: cleanedInsert });
+            } else {
+              cleanedOps.push(op);
+            }
+            
+            // Update consecutive count based on trailing newlines
+            const trailingNewlines = cleanedInsert.match(/\n+$/)?.[0]?.length || 0;
+            consecutiveNewlines = trailingNewlines;
+          } else {
+            // Regular text without newlines - reset counter and add the op
+            consecutiveNewlines = 0;
+            cleanedOps.push(op);
+          }
+        } else {
+          // Non-string insert (embed, etc.) - reset counter and add the op
+          consecutiveNewlines = 0;
+          cleanedOps.push(op);
+        }
+      }
+
+      return JSON.stringify({ ops: cleanedOps });
+    } catch (error) {
+      console.error('Error cleaning archive content line breaks:', error);
+      return deltaContent; // Return original on error
+    }
+  }
+
   onEditorCreated(quill: any) {
     // Custom video button handler for YouTube/Vimeo support
     const toolbar = quill.getModule('toolbar');
@@ -319,7 +390,7 @@ export class CreateContentPage implements OnInit {
   private validateThumbnailFile(file: File): { valid: boolean; error?: string } {
     // Maximum file size: 5MB
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    
+
     // Allowed MIME types - only safe static image formats
     const ALLOWED_MIME_TYPES = [
       'image/jpeg',
@@ -333,7 +404,7 @@ export class CreateContentPage implements OnInit {
       'image/heic',
       'image/heif'
     ];
-    
+
     // Allowed file extensions (case-insensitive)
     const ALLOWED_EXTENSIONS = [
       '.jpg',
@@ -347,7 +418,7 @@ export class CreateContentPage implements OnInit {
       '.heic',
       '.heif'
     ];
-    
+
     // Explicitly blocked MIME types
     const BLOCKED_MIME_TYPES = [
       'image/gif',
@@ -359,16 +430,16 @@ export class CreateContentPage implements OnInit {
       'text/',
       'model/'
     ];
-    
+
     // Check file size
     if (file.size === 0) {
       return { valid: false, error: 'File is empty' };
     }
-    
+
     if (file.size > MAX_FILE_SIZE) {
       return { valid: false, error: `Image size must be less than 5MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB` };
     }
-    
+
     // Check if file type is explicitly blocked
     const lowerMimeType = file.type.toLowerCase();
     for (const blockedType of BLOCKED_MIME_TYPES) {
@@ -376,32 +447,32 @@ export class CreateContentPage implements OnInit {
         return { valid: false, error: `File type not allowed. GIF, SVG, video, and other non-image files are not permitted.` };
       }
     }
-    
+
     // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(lowerMimeType)) {
       return { valid: false, error: `Invalid file type. Only JPEG, PNG, WebP, BMP, TIFF, AVIF, and HEIC images are allowed.` };
     }
-    
+
     // Validate file extension (additional security layer)
     const fileName = file.name.toLowerCase();
     const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
-    
+
     if (!hasValidExtension) {
       return { valid: false, error: `Invalid file extension. Only .jpg, .jpeg, .png, .webp, .bmp, .tiff, .avif, and .heic files are allowed.` };
     }
-    
+
     // Additional security: Check for double extensions (e.g., image.jpg.exe)
     const parts = fileName.split('.');
     if (parts.length > 2) {
       const lastExt = '.' + parts[parts.length - 1];
       const secondLastExt = '.' + parts[parts.length - 2];
       // If the last extension is not in allowed list, or if there's a suspicious pattern
-      if (!ALLOWED_EXTENSIONS.includes(lastExt) || 
+      if (!ALLOWED_EXTENSIONS.includes(lastExt) ||
           (secondLastExt && !ALLOWED_EXTENSIONS.includes(secondLastExt) && secondLastExt !== '.tar')) {
         return { valid: false, error: 'Suspicious file name detected. Please use a standard image file.' };
       }
     }
-    
+
     return { valid: true };
   }
 
@@ -413,32 +484,32 @@ export class CreateContentPage implements OnInit {
     return new Promise((resolve) => {
       const img = new Image();
       const reader = new FileReader();
-      
+
       reader.onload = (e: any) => {
         img.onload = () => {
           if (img.width > maxDimension || img.height > maxDimension) {
-            resolve({ 
-              valid: false, 
-              error: `Image dimensions must not exceed ${maxDimension}x${maxDimension} pixels. Current size: ${img.width}x${img.height}px` 
+            resolve({
+              valid: false,
+              error: `Image dimensions must not exceed ${maxDimension}x${maxDimension} pixels. Current size: ${img.width}x${img.height}px`
             });
           } else {
             resolve({ valid: true });
           }
         };
-        
+
         img.onerror = () => {
           // If we can't load the image, it might be corrupted, but we'll allow it
           // since MIME type and extension validation already passed
           resolve({ valid: true });
         };
-        
+
         img.src = e.target.result;
       };
-      
+
       reader.onerror = () => {
         resolve({ valid: true }); // Allow if we can't read, other validations will catch issues
       };
-      
+
       reader.readAsDataURL(file);
     });
   }
@@ -447,7 +518,7 @@ export class CreateContentPage implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       // Comprehensive validation
       const validation = this.validateThumbnailFile(file);
       if (!validation.valid) {
@@ -456,7 +527,7 @@ export class CreateContentPage implements OnInit {
         input.value = '';
         return;
       }
-      
+
       // Validate image dimensions
       const MAX_DIMENSION = 4000;
       const dimensionValidation = await this.validateImageDimensions(file, MAX_DIMENSION);
@@ -466,9 +537,9 @@ export class CreateContentPage implements OnInit {
         input.value = '';
         return;
       }
-      
+
       this.thumbnailFile = file;
-      
+
       // Show preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
@@ -505,7 +576,7 @@ export class CreateContentPage implements OnInit {
     }
 
     this.isUploadingThumbnail = true;
-    
+
     try {
       // Ensure user is authenticated
       if (!this.currentUser || !this.currentUser.uid) {
@@ -520,39 +591,39 @@ export class CreateContentPage implements OnInit {
       const extension = originalName.substring(originalName.lastIndexOf('.'));
       const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.tif', '.avif', '.heic', '.heif'];
       const safeExtension = allowedExtensions.includes(extension) ? extension : '.jpg'; // Default to .jpg if extension is missing
-      
+
       // Sanitize filename: remove all non-alphanumeric except dots and hyphens, then add timestamp
       const baseName = originalName.replace(/\.[^.]*$/, ''); // Remove extension
       const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-]/g, '_').substring(0, 50); // Limit length
       const sanitizedFileName = `${sanitizedBaseName}_${timestamp}${safeExtension}`;
-      
+
       const filename = `thumbnails/${this.currentUser.uid}/${sanitizedFileName}`;
       const storageRef = ref(this.storage, filename);
-      
+
       // Upload file (metadata is optional and may cause issues if Storage isn't fully configured)
       console.log('[Thumbnail Upload] Starting upload to:', filename);
       console.log('[Thumbnail Upload] File type:', this.thumbnailFile.type);
       console.log('[Thumbnail Upload] File size:', this.thumbnailFile.size, 'bytes');
-      
+
       // Try upload without metadata first (simpler, more compatible)
       await uploadBytes(storageRef, this.thumbnailFile);
       console.log('[Thumbnail Upload] Upload successful');
-      
+
       // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
       console.log('[Thumbnail Upload] Download URL:', downloadURL);
-      
+
       this.thumbnailUrl = downloadURL;
       this.thumbnailFile = null; // Clear file after successful upload
-      
+
       return downloadURL;
     } catch (error: any) {
       console.error('Error uploading thumbnail:', error);
       console.error('Error code:', error?.code);
       console.error('Error message:', error?.message);
-      
+
       let errorMessage = 'Failed to upload thumbnail. Please try again.';
-      
+
       // Check for specific error codes
       if (error?.code === 'storage/unauthorized') {
         errorMessage = 'Permission denied. Please ensure you are logged in as an admin.';
@@ -565,7 +636,7 @@ export class CreateContentPage implements OnInit {
       } else if (error?.message?.includes('bucket') || error?.code === 'storage/unknown') {
         errorMessage = 'Firebase Storage is not set up. Please enable Storage in Firebase Console.';
       }
-      
+
       // Log full error for debugging
       console.error('[Thumbnail Upload] Full error object:', {
         code: error?.code,
@@ -573,7 +644,7 @@ export class CreateContentPage implements OnInit {
         stack: error?.stack,
         name: error?.name
       });
-      
+
       await this.showToast(errorMessage, 'danger');
       return null;
     } finally {
@@ -662,7 +733,7 @@ export class CreateContentPage implements OnInit {
       // Upload thumbnail if a new file was selected
       // Note: If Storage isn't enabled, this will fail gracefully
       const thumbnailUrl = await this.uploadThumbnail();
-      
+
       // If upload failed but we have a file, warn user but continue
       if (this.thumbnailFile && !thumbnailUrl) {
         const continueWithoutThumbnail = confirm(
@@ -680,21 +751,27 @@ export class CreateContentPage implements OnInit {
           return;
         }
       }
-      
+
+      // Clean up line breaks for archive content only
+      let processedContent = this.content.trim();
+      if (this.isArchiveMode) {
+        processedContent = this.cleanArchiveContentLineBreaks(processedContent);
+      }
+
       const contentData: any = {
         title: this.title.trim(),
         excerpt: this.excerpt.trim(),
-        content: this.content.trim(),
+        content: processedContent,
         status: 'draft',
         authorId: this.currentUser.uid,
         authorEmail: this.currentUser.email,
         tags: this.tags.length > 0 ? this.tags : undefined
       };
-      
+
       // Add archive flag and archive-specific fields if in archive mode
       if (this.isArchiveMode) {
         contentData.archive = true;
-        
+
         // Add original date if provided
         if (this.originalDate && this.originalDate.trim()) {
           const dateObj = new Date(this.originalDate);
@@ -702,18 +779,18 @@ export class CreateContentPage implements OnInit {
             contentData.originalDate = Timestamp.fromDate(dateObj);
           }
         }
-        
+
         // Add original author if provided
         if (this.originalAuthor && this.originalAuthor.trim()) {
           contentData.originalAuthor = this.originalAuthor.trim();
         }
-        
+
         // Add archive source (default to "wayback machine" if not entered)
-        contentData.archiveSource = (this.archiveSource && this.archiveSource.trim()) 
-          ? this.archiveSource.trim() 
+        contentData.archiveSource = (this.archiveSource && this.archiveSource.trim())
+          ? this.archiveSource.trim()
           : 'wayback machine';
       }
-      
+
       // Add thumbnailUrl (include null to allow clearing)
       contentData.thumbnailUrl = thumbnailUrl || null;
 
@@ -798,7 +875,7 @@ export class CreateContentPage implements OnInit {
       // Upload thumbnail if a new file was selected
       // Note: If Storage isn't enabled, this will fail gracefully
       const thumbnailUrl = await this.uploadThumbnail();
-      
+
       // If upload failed but we have a file, warn user but continue
       if (this.thumbnailFile && !thumbnailUrl) {
         const continueWithoutThumbnail = confirm(
@@ -816,7 +893,7 @@ export class CreateContentPage implements OnInit {
           return;
         }
       }
-      
+
       const isUpdate = !!this.savedContentId;
       console.log('[CreateContent] Publishing content');
       console.log('[CreateContent] Operation:', isUpdate ? 'UPDATE (existing document)' : 'CREATE (new document)');
@@ -828,20 +905,26 @@ export class CreateContentPage implements OnInit {
         console.log('[CreateContent] Note: authorId will be set to current user (new document)');
       }
 
+      // Clean up line breaks for archive content only
+      let processedContent = this.content.trim();
+      if (this.isArchiveMode) {
+        processedContent = this.cleanArchiveContentLineBreaks(processedContent);
+      }
+
       const contentData: any = {
         title: this.title.trim(),
         excerpt: this.excerpt.trim(),
-        content: this.content.trim(),
+        content: processedContent,
         status: 'published',
         authorId: this.currentUser.uid,
         authorEmail: this.currentUser.email,
         tags: this.tags.length > 0 ? this.tags : undefined
       };
-      
+
       // Add archive flag and archive-specific fields if in archive mode
       if (this.isArchiveMode) {
         contentData.archive = true;
-        
+
         // Add original date if provided
         if (this.originalDate && this.originalDate.trim()) {
           const dateObj = new Date(this.originalDate);
@@ -849,15 +932,15 @@ export class CreateContentPage implements OnInit {
             contentData.originalDate = Timestamp.fromDate(dateObj);
           }
         }
-        
+
         // Add original author if provided
         if (this.originalAuthor && this.originalAuthor.trim()) {
           contentData.originalAuthor = this.originalAuthor.trim();
         }
-        
+
         // Add archive source (default to "wayback machine" if not entered)
-        contentData.archiveSource = (this.archiveSource && this.archiveSource.trim()) 
-          ? this.archiveSource.trim() 
+        contentData.archiveSource = (this.archiveSource && this.archiveSource.trim())
+          ? this.archiveSource.trim()
           : 'wayback machine';
       } else if (this.savedContentId) {
         // Preserve archive flag and archive fields if they were already set (when updating existing content)
@@ -879,7 +962,7 @@ export class CreateContentPage implements OnInit {
           }
         }
       }
-      
+
       // Add thumbnailUrl (include null to allow clearing)
       contentData.thumbnailUrl = thumbnailUrl || null;
 
