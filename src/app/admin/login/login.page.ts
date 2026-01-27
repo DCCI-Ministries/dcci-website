@@ -37,7 +37,7 @@ import { Subscription, firstValueFrom } from 'rxjs';
 })
 export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('verificationCard', { read: ElementRef }) verificationCard!: ElementRef;
-  
+
   loginForm: FormGroup;
   isSignUpMode = false;
   isLoading = false;
@@ -71,7 +71,7 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
         this.router.navigate(['/admin/dashboard']);
       }
     });
-    
+
     // Check for verified query parameter
     const verified = this.route.snapshot.queryParams['verified'];
     if (verified === '1') {
@@ -84,10 +84,10 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
         replaceUrl: true
       });
     }
-    
+
     // Check for existing lockouts when page loads
     this.checkForExistingLockout();
-    
+
     // Listen for email changes to check for lockouts
     this.loginForm.get('email')?.valueChanges.subscribe(() => {
       this.checkForExistingLockout();
@@ -98,9 +98,9 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
     // Scroll to verification card after successful signup
     if (this.shouldScrollToVerification && this.verificationCard) {
       setTimeout(() => {
-        this.verificationCard.nativeElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        this.verificationCard.nativeElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
         });
         this.shouldScrollToVerification = false;
       }, 100);
@@ -146,7 +146,7 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
         } else {
           result = await this.authService.signIn(email, password, honeypot);
         }
-        
+
         console.log('Auth result:', result);
 
         if (result.needsVerification) {
@@ -220,8 +220,8 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
         const failedAttempts = await this.authService.getFailedAttempts(email);
         if (failedAttempts && failedAttempts.lockedUntil && failedAttempts.lockedUntil > new Date()) {
           const lockTimeRemaining = Math.ceil((failedAttempts.lockedUntil.getTime() - new Date().getTime()) / (1000 * 60));
-          this.statusMessage = { 
-            success: false, 
+          this.statusMessage = {
+            success: false,
             message: `🔒 Account locked for ${lockTimeRemaining} minutes due to 3 failed login attempts. For security, you must reset your password to regain access.`,
             isLocked: true
           };

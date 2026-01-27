@@ -11,7 +11,8 @@ import { environment } from '../../environments/environment';
 })
 export class UserManagementService {
   // Allowed emails for user management access (extra security layer)
-  private readonly ALLOWED_EMAILS = ['admin@accessiblewebmedia.com', 'hatun@dcciministries.com']; // Add Hatun email later
+  // These emails can access User Management even if they're admins in Firestore
+  private readonly ALLOWED_EMAILS = ['admin@accessiblewebmedia.com', 'hatun@dcciministries.com'];
 
   constructor(
     private firestore: Firestore,

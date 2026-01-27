@@ -69,6 +69,20 @@ service cloud.firestore {
              );
     }
 
+    // Helper function to check if registrations are disabled
+    // Returns true if disableRegistrations is enabled OR nuclearLockdown is enabled
+    // Used specifically for blocking new user signups
+    // Handles case where document doesn't exist (fail-safe: registrations allowed)
+    function areRegistrationsDisabled() {
+      return exists(/databases/$(database)/documents/siteSettings/emergency) &&
+             (
+               // Nuclear lockdown blocks EVERYTHING including signups
+               get(/databases/$(database)/documents/siteSettings/emergency).data.nuclearLockdown == true ||
+               // Explicit disable registrations flag
+               get(/databases/$(database)/documents/siteSettings/emergency).data.disableRegistrations == true
+             );
+    }
+
     // Helper function to validate content document fields
     // Allows all fields used by CMS and YouTube importer (tags, type, youtubeVideoId, etc.)
     // Also allows archive-specific fields (archive, originalDate, originalAuthor, archiveSource)
@@ -86,10 +100,11 @@ service cloud.firestore {
     // Admin users collection - for CMS authentication
     match /adminUsers/{userId} {
       // Allow authenticated users to create their own admin user document
-      // Block if site is in read-only mode (registration disabled)
+      // Block only if registrations are explicitly disabled OR nuclear lockdown is active
+      // Note: readOnlyMode does NOT block signups - it only blocks content modifications
       allow create: if request.auth != null &&
         request.auth.uid == userId &&
-        !siteIsReadOnly();
+        !areRegistrationsDisabled();
 
       // Allow users to update their own document
       // Specifically allow updating emailVerified from false to true (for email verification flow)
