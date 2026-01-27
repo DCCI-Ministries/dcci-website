@@ -20,6 +20,10 @@ This directory contains comprehensive documentation for the DCCI Ministries webs
 ### 🛠️ **For Operations & Maintenance**
 - **[Troubleshooting](./troubleshooting.md)** - Common issues and their solutions
 - **[Emergency Procedures](./emergency-procedures.md)** - Critical incident response procedures
+- **[Admin Access and Email Guard](./admin-access-and-email-guard.md)** - How Firestore admin status and the email allowlist work together; why admins must be added to the guard to access User Management and other guard-gated features
+
+### 📧 **Contact Form & Email**
+- **[Contact Form Setup](../CONTACT_FORM_SETUP.md)** (project root) - Contact form setup, **email routing (shield/monitor)**, and Firebase config. Explains routing to an admin inbox for spam/scam monitoring and shielding the real recipient; how to remove the shield or route to your own email.
 
 ## 🎯 **Quick Start for Developers**
 
