@@ -1,6 +1,10 @@
 # Specifies intentionally untracked files to ignore when using Git
 # http://git-scm.com/docs/gitignore
 
+# Private local docs (never commit)
+Security and Recovery Instructions.md
+Recovery Package Version 0.0/
+
 # Environment files
 src/environments/environment.ts
 src/environments/environment.prod.ts
