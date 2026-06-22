@@ -548,6 +548,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/admin/emergency-controls']);
   }
 
+  navigateToWelcomeSettings() {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    this.router.navigate(['/admin/welcome-settings']);
+  }
+
   /**
    * Check if current user is a full Admin (not Moderator)
    */

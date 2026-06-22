@@ -1,0 +1,172 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Welcome Page</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="welcome-settings-form" *ngIf="!isLoading; else loadingState">
+    <h2>Edit Welcome Page</h2>
+    <p class="subtitle">
+      Update each section of the public welcome page. Changes appear on the live site immediately and trigger an SEO rebuild for search engines.
+    </p>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Header</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Tagline (below ministry name)</ion-label>
+          <ion-input [(ngModel)]="content.headerTagline"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Hero Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Hero Title</ion-label>
+          <ion-input [(ngModel)]="content.heroTitle"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Hero Subtitle</ion-label>
+          <ion-input [(ngModel)]="content.heroSubtitle"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Mission Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.missionHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.missionContent"
+            [modules]="quillModules"
+            placeholder="Mission statement..."
+            [styles]="{ height: '220px' }"
+          ></quill-editor>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Social Media Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.socialHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.socialContent"
+            [modules]="quillModules"
+            placeholder="Social section text..."
+            [styles]="{ height: '160px' }"
+          ></quill-editor>
+        </div>
+        <p class="field-hint">Social media links are managed in the page template and are not editable here.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Support Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.supportHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.supportContent"
+            [modules]="quillModules"
+            placeholder="Support section text..."
+            [styles]="{ height: '160px' }"
+          ></quill-editor>
+        </div>
+        <p class="field-hint">PayPal, Patreon, and CashApp links are managed in the page template.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Testimony Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Statement</ion-label>
+          <ion-input [(ngModel)]="content.testimonyStatement"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Scripture / Verse</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.testimonyVerse"
+            [modules]="quillModules"
+            placeholder="Testimony verse..."
+            [styles]="{ height: '140px' }"
+          ></quill-editor>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Search Engine (SEO)</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Page Title</ion-label>
+          <ion-input [(ngModel)]="content.seoTitle"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Meta Description</ion-label>
+          <ion-input [(ngModel)]="content.seoDescription"></ion-input>
+        </ion-item>
+        <p class="field-hint">Used on the SEO-friendly welcome page that search engines index.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="form-actions">
+      <ion-button fill="outline" (click)="cancel()" [disabled]="isSaving">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Cancel
+      </ion-button>
+      <ion-button (click)="save()" [disabled]="isSaving || readOnlyMode">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        <span *ngIf="!isSaving">Save Welcome Page</span>
+        <span *ngIf="isSaving">Saving...</span>
+      </ion-button>
+    </div>
+
+    <div *ngIf="readOnlyMode" class="read-only-notice">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <p>Site is in read-only mode. Save is disabled.</p>
+    </div>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading welcome page content...</p>
+    </div>
+  </ng-template>
+</ion-content>

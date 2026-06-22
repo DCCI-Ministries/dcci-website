@@ -111,6 +111,10 @@
               <ion-icon name="people-outline" slot="start"></ion-icon>
               User Management
             </ion-button>
+            <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToWelcomeSettings()" *ngIf="isFullAdmin()">
+              <ion-icon name="home-outline" slot="start"></ion-icon>
+              Welcome Page
+            </ion-button>
             <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToEmergencyControls()" *ngIf="isFullAdmin()">
               <ion-icon name="settings-outline" slot="start"></ion-icon>
               Site Management

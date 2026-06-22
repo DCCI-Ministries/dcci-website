@@ -2376,6 +2376,64 @@ export const onArticleUpdate = functions.firestore
   });
 
 /**
+ * Trigger Astro rebuild when welcome page content is updated (SEO static page).
+ */
+export const onWelcomePageUpdate = functions.firestore
+  .document('siteSettings/welcome')
+  .onWrite(async (change) => {
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.exists ? change.after.data() : null;
+
+    if (!after) {
+      console.log('Welcome page settings deleted. Skipping rebuild.');
+      return null;
+    }
+
+    const contentFields = [
+      'headerTagline',
+      'heroTitle',
+      'heroSubtitle',
+      'missionHeading',
+      'missionContent',
+      'socialHeading',
+      'socialContent',
+      'supportHeading',
+      'supportContent',
+      'testimonyStatement',
+      'testimonyVerse',
+      'seoTitle',
+      'seoDescription'
+    ];
+
+    const changed = !before || contentFields.some((field) => before[field] !== after[field]);
+    if (!changed) {
+      console.log('Welcome page updated but content fields unchanged. Skipping rebuild.');
+      return null;
+    }
+
+    console.log('Welcome page content updated. Triggering Astro rebuild...');
+
+    try {
+      const githubToken = functions.config().github?.token;
+      const githubRepo = functions.config().github?.repo;
+      const githubWorkflow = functions.config().github?.workflow || 'rebuild-astro.yml';
+
+      if (githubToken && githubRepo) {
+        console.log(`Triggering GitHub Actions workflow: ${githubRepo}/${githubWorkflow}`);
+        await triggerGitHubActions(githubToken, githubRepo, githubWorkflow, 'welcome');
+        return null;
+      }
+
+      console.log('GitHub Actions not configured. Attempting direct Firebase Hosting deployment...');
+      await triggerFirebaseHostingDeploy('welcome');
+      return null;
+    } catch (error) {
+      console.error('Error triggering rebuild for welcome page:', error);
+      return null;
+    }
+  });
+
+/**
  * Trigger GitHub Actions workflow via repository_dispatch API
  */
 async function triggerGitHubActions(

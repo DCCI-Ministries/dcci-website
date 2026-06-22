@@ -1,12 +1,14 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getWelcomePageContent } from '../../lib/firestore';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../../lib/seo';
 
+const welcome = await getWelcomePageContent();
 const canonicalUrl = absoluteUrl('/welcome/');
 
 const seoData = {
-  title: 'DCCI Ministries - Defend Christ, Critique Islam',
-  description: 'Proclaiming Jesus Christ where truth is costly. DCCI Ministries engages with Islam through apologetics and polemics, preaching the Gospel with love and truth.',
+  title: welcome.seoTitle,
+  description: welcome.seoDescription,
   canonicalUrl,
   type: 'website' as const
 };
@@ -16,8 +18,8 @@ const jsonLd = generateJSONLD(seoData);
 ---
 
 <SiteLayout
-  title="DCCI Ministries - Defend Christ, Critique Islam"
-  description="Proclaiming Jesus Christ where truth is costly. DCCI Ministries engages with Islam through apologetics and polemics, preaching the Gospel with love and truth."
+  title={welcome.seoTitle}
+  description={welcome.seoDescription}
   metaTags={metaTags}
   jsonLd={jsonLd}
 >
@@ -28,34 +30,29 @@ const jsonLd = generateJSONLD(seoData);
       <a href="/app/welcome" class="cta-button">Open Interactive Site</a>
     </div>
 
-    <h1>Welcome to DCCI Ministries</h1>
-    <p class="tagline">Proclaiming Jesus Christ where truth is costly.</p>
-    <p class="tagline-sub">Defend Christ, Critique Islam</p>
+    <h1>{welcome.heroTitle}</h1>
+    <p class="tagline">{welcome.heroSubtitle}</p>
+    <p class="tagline-sub">{welcome.headerTagline}</p>
 
     <section class="mission-section">
-      <h2>Our Mission</h2>
-      <p>
-        Our motivation is love for Muslims to bring them to repentance and faith in Christ for eternal life. We seek to preach the Gospel to Muslims using apologetics and polemics, regularly engaging with Muslims at Speakers Corner.
-      </p>
-      <p>
-        Like the Apostle Paul, "we do not use deception, nor do we distort the Word of God" (2 Cor 4:2). Rather "we demolish arguments and every pretension that sets itself up against the knowledge of God."
-      </p>
+      <h2>{welcome.missionHeading}</h2>
+      <div set:html={welcome.missionContent} />
     </section>
 
-    <section class="purpose-section">
-      <h2>What We Offer</h2>
-      <p>This ministry exists to proclaim Jesus Christ where speaking freely can carry a cost.</p>
-      <ul>
-        <li><strong>Apologetics & Public Witness:</strong> Engaging Islam and false teaching with Christ-centered apologetics through teaching, dialogue, and public witness.</li>
-        <li><strong>Support for Seekers & the Persecuted:</strong> Encouragement and clarity for those questioning Islam, facing pressure, or seeking truth—especially converts and those at risk.</li>
-        <li><strong>Teaching Archive & Study Resources:</strong> A curated library of videos and articles to help you understand the Gospel, respond thoughtfully, and grow in faith.</li>
-      </ul>
+    <section class="social-section">
+      <h2>{welcome.socialHeading}</h2>
+      <div set:html={welcome.socialContent} />
+    </section>
+
+    <section class="support-section">
+      <h2>{welcome.supportHeading}</h2>
+      <div set:html={welcome.supportContent} />
     </section>
 
     <section class="testimony-section">
       <h2>Our Foundation</h2>
-      <p class="testimony-statement"><strong>Jesus is LORD</strong></p>
-      <p class="testimony-verse">John 20:31 — "but these are written so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in his name"</p>
+      <p class="testimony-statement"><strong>{welcome.testimonyStatement}</strong></p>
+      <div class="testimony-verse" set:html={welcome.testimonyVerse.startsWith('<') ? welcome.testimonyVerse : `<p>${welcome.testimonyVerse}</p>`} />
     </section>
     <style>
       .tagline {
@@ -71,11 +68,9 @@ const jsonLd = generateJSONLD(seoData);
         margin-bottom: 2rem;
       }
 
-      .mission-section {
-        margin-top: 2rem;
-      }
-
-      .purpose-section {
+      .mission-section,
+      .social-section,
+      .support-section {
         margin-top: 2rem;
       }
 
@@ -101,4 +96,3 @@ const jsonLd = generateJSONLD(seoData);
     </style>
   </main>
 </SiteLayout>
-

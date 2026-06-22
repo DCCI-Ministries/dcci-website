@@ -1,0 +1,99 @@
+.welcome-settings-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 0 40px;
+
+  h2 {
+    margin-bottom: 8px;
+    color: var(--ion-color-primary);
+  }
+
+  .subtitle {
+    color: var(--ion-color-medium);
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  ion-card {
+    margin-bottom: 20px;
+  }
+
+  ion-item {
+    margin-bottom: 12px;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+  }
+
+  .field-label {
+    display: block;
+    margin: 8px 0 8px;
+    font-size: 14px;
+    color: var(--ion-color-medium);
+  }
+
+  .field-hint {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    line-height: 1.4;
+  }
+
+  .quill-editor-wrapper {
+    margin-bottom: 8px;
+    background: var(--ion-background-color, #ffffff);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--ion-border-color, #e0e0e0);
+
+    ::ng-deep {
+      .ql-container {
+        font-size: 16px;
+        background: var(--ion-background-color, #ffffff);
+        color: var(--ion-text-color, #000000);
+      }
+
+      .ql-editor {
+        min-height: 120px;
+      }
+
+      .ql-toolbar {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+
+  .read-only-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(var(--ion-color-warning-rgb), 0.12);
+    color: var(--ion-color-warning-shade);
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 240px;
+  color: var(--ion-color-medium);
+}
