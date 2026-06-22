@@ -28,9 +28,9 @@ export const adminGuard: CanActivateFn = (route, state) => {
     });
   }).pipe(
     switchMap((firebaseUser) => {
-      // If no Firebase user, redirect to welcome
+      // If no Firebase user, redirect to home (under construction)
       if (!firebaseUser) {
-        return of(router.createUrlTree(['/welcome']));
+        return of(router.createUrlTree(['/home']));
       }
 
       // Wait for site settings (filter out null/undefined)
@@ -71,12 +71,12 @@ export const adminGuard: CanActivateFn = (route, state) => {
               (user.userRole === 'Admin' || user.userRole === 'Moderator')) {
             return true;
           } else {
-            // Redirect to welcome page if not admin/moderator or email not verified
-            return router.createUrlTree(['/welcome']);
+            // Redirect to home (under construction) if not admin/moderator or email not verified
+            return router.createUrlTree(['/home']);
           }
         })
       );
     }),
-    catchError(() => of(router.createUrlTree(['/welcome'])))
+    catchError(() => of(router.createUrlTree(['/home'])))
   );
 };

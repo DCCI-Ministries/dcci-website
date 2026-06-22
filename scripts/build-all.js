@@ -1,8 +1,10 @@
 /**
  * Build script that:
  * 1. Builds Angular to dist/app
- * 2. Builds Astro to dist/public-site
- * 3. Copies Astro output into dist/app (without overwriting Angular's index.html)
+ * 2. Builds Astro to dist/public-site (for SEO artifacts only)
+ * 3. Copies only Astro SEO files (sitemap.xml, robots.txt) into dist/app
+ *
+ * The entire website is Angular. Astro is used ONLY for SEO (sitemap, robots).
  */
 
 const { execSync } = require('child_process');
@@ -24,8 +26,8 @@ try {
   process.exit(1);
 }
 
-// Step 2: Build Astro
-console.log('📦 Step 2: Building Astro public site...');
+// Step 2: Build Astro (generates sitemap.xml, robots.txt for SEO)
+console.log('📦 Step 2: Building Astro (SEO artifacts only)...');
 try {
   execSync('npm run build', { stdio: 'inherit', cwd: path.join(__dirname, '..', 'public-site') });
   console.log('✅ Astro build complete\n');
@@ -34,8 +36,8 @@ try {
   process.exit(1);
 }
 
-// Step 3: Copy Astro output to dist/app
-console.log('📦 Step 3: Copying Astro output to dist/app...');
+// Step 3: Copy only Astro SEO files to dist/app
+console.log('📦 Step 3: Copying Astro SEO files to dist/app...');
 
 if (!fs.existsSync(distPublicSitePath)) {
   console.error(`❌ Astro output directory not found: ${distPublicSitePath}`);
@@ -47,68 +49,16 @@ if (!fs.existsSync(distAppPath)) {
   process.exit(1);
 }
 
-// Function to copy directory recursively
-function copyDir(src, dest) {
-  if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
-  }
-  
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-  
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
-    } else {
-      // Skip Angular's index.html - we don't want to overwrite it
-      if (entry.name === 'index.html' && dest === distAppPath) {
-        console.log(`⚠️  Skipping ${entry.name} (preserving Angular's index.html)`);
-        continue;
-      }
-      fs.copyFileSync(srcPath, destPath);
-    }
+const seoFiles = ['sitemap.xml', 'robots.txt'];
+for (const name of seoFiles) {
+  const srcPath = path.join(distPublicSitePath, name);
+  const destPath = path.join(distAppPath, name);
+  if (fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`   ✓ ${name}`);
   }
 }
 
-// Copy all files from dist/public-site to dist/app
-try {
-  const entries = fs.readdirSync(distPublicSitePath, { withFileTypes: true });
-  
-  for (const entry of entries) {
-    const srcPath = path.join(distPublicSitePath, entry.name);
-    const destPath = path.join(distAppPath, entry.name);
-    
-    if (entry.isDirectory()) {
-      // If directory exists, merge contents
-      if (fs.existsSync(destPath)) {
-        copyDir(srcPath, destPath);
-      } else {
-        copyDir(srcPath, destPath);
-      }
-    } else {
-      // Skip index.html - preserve Angular's version
-      if (entry.name === 'index.html') {
-        console.log(`⚠️  Skipping ${entry.name} (preserving Angular's index.html)`);
-        continue;
-      }
-      fs.copyFileSync(srcPath, destPath);
-    }
-  }
-  
-  console.log('✅ Astro files copied to dist/app\n');
-  console.log('📋 Files copied:');
-  console.log('   - /welcome/ (Astro static page)');
-  console.log('   - /articles/ (Astro static page)');
-  console.log('   - /articles/[slug]/ (Astro static pages)');
-  console.log('   - /sitemap.xml (Astro generated)');
-  console.log('   - /robots.txt (Astro generated)');
-  console.log('   - All Astro assets\n');
-  
-  console.log('✅ Build complete! Ready for deployment.');
-} catch (error) {
-  console.error('❌ Error copying Astro files:', error.message);
-  process.exit(1);
-}
+console.log('✅ Astro SEO files copied\n');
+console.log('✅ Build complete! Entire site is Angular; Astro provides sitemap + robots only.');
 

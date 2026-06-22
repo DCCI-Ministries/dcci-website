@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IonButton, IonIcon } from '@ionic/angular/standalone';
 import { MenuController } from '@ionic/angular/standalone';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './page-header-with-menu.component.html',
   styleUrls: ['./page-header-with-menu.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, IonButton, IonIcon]
+  imports: [CommonModule, NgIf, RouterModule, IonButton, IonIcon]
 })
 export class PageHeaderWithMenuComponent implements OnInit, OnDestroy {
   isScrolled = false;

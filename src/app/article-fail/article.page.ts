@@ -374,7 +374,7 @@ export class ArticlePage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/welcome']);
+    this.router.navigate(['/home']);
   }
 
 
