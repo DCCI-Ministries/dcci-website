@@ -1,5 +1,59 @@
 # Dev Log
 
+## 2026-06-21
+
+### Welcome Page — Admin-Editable Content (SEO-Safe)
+- **New admin screen:** Dashboard → **Welcome Page** (`/admin/welcome-settings`), full admins only
+- **Draft / preview / publish:** Edits stay in a draft until **Publish live**; **Preview** at `/admin/welcome-preview`; last 10 published snapshots kept for rollback
+- **Editable sections:** Header tagline, hero title/subtitle, mission, social blurb, support blurb, testimony, SEO title/description, custom social/support links
+- **Editors:** Quill rich-text for body sections; plain fields for headings and short text
+- **Storage:** Firestore `siteSettings/welcome` (public read for live page; full-admin write)
+- **Live site:** Angular welcome page loads content in real time; layout and styling unchanged
+- **SEO:** Astro `public-site/src/pages/welcome/index.astro` reads the same data at build time
+- **Auto-rebuild:** Cloud Function `onWelcomePageUpdate` triggers Astro redeploy when welcome content changes
+- **Files added:**
+  - `src/app/models/welcome-content.model.ts`
+  - `src/app/services/welcome-content.service.ts`
+  - `src/app/admin/welcome-settings/*`
+  - `public-site/src/lib/welcomeContent.ts`
+
+### Contact Form — Direct Delivery, Privacy, and High Security
+- **Email routing:** Contact form emails go **directly** to the configured ministry inbox (now from `config/site-contacts.json`)
+- **Removed:** Admin/monitor inbox shield (`mail.to` no longer used for contact form)
+- **Firestore privacy:** Message content (name, email, subject, body) is **not** stored. Each successful send logs only:
+  - `submittedAt`
+  - `newsletterOptIn` (boolean)
+- **Dashboard:** Messages count uses `contacts` collection size; Recent Activity shows “Contact form submission received” (no sender names)
+- **Website problem reports** still email the configured technical admin inbox
+
+#### Contact form security layers (legit-user friendly)
+- **Removed** blanket VPN IP blocking (legitimate VPN users can submit)
+- **Added** disposable/throwaway email domain blocking
+- **Added** link rules: max 3 links per message; URL shorteners blocked (bit.ly, tinyurl, etc.)
+- **Added** per-email rate limit: 3 submissions per 24 hours
+- **Kept** 5-minute per-IP cooldown (recorded only after successful send)
+- **Reduced** minimum form fill time from 10s to 8s
+- **Added** Firebase App Check wiring (invisible reCAPTCHA v3) — optional until site key + `security.enforce_app_check` are configured
+- **New Firestore collections (metadata only):** `contactRateLimits`, `contactEmailRateLimits`
+- **Files:** `functions/src/contact-security.ts`, `functions/src/sanitization.ts`, `src/app/services/contact.service.ts`, `src/main.ts`
+
+#### Documentation note
+- Privacy pages previously listed “reCAPTCHA” as active spam protection; it was **documented ahead of implementation**. App Check + reCAPTCHA v3 code exists as of this date but requires Firebase Console setup and `appCheckRecaptchaSiteKey` in production environment files.
+
+#### Privacy policy and reporting documentation (same day, follow-up)
+- **Updated** public privacy policy (Angular `src/app/privacy/privacy.page.html` + Astro `public-site/src/pages/privacy.astro`):
+  - New section: contact form, spam protection, and global access (no reCAPTCHA, no VPN blocking, no full message storage in DB)
+  - Accurate third-party / retention wording for contact form
+- **New** [docs/contact-form-privacy-and-reporting.md](./contact-form-privacy-and-reporting.md) — privacy tradeoffs, why no reCAPTCHA/VPN blocking, Hatun reporting guide for site manager
+- **New** [docs/admin-dashboard.md](./admin-dashboard.md) — dashboard sections, quick actions, welcome draft/preview/publish guide
+- **Updated** [CONTACT_FORM_SETUP.md](../CONTACT_FORM_SETUP.md) — design philosophy section
+- **New** [technical-contact-handoff.md](./technical-contact-handoff.md) — safe developer handoff for `technicalAdminEmail` (UK/EU technical contact)
+- **Updated** [config/README.md](../config/README.md) — links handoff guide; clarifies three email roles
+- **Deprecated** [IP_BLOCKING_SETUP.md](../IP_BLOCKING_SETUP.md)
+- **Removed** obsolete VPN error handling from `contact-form.component.ts`
+
+---
+
 ## 2025-01-XX (Recent Updates)
 
 ### Admin Content Creation - Thumbnail Upload Security

@@ -1,0 +1,226 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Admin Guide</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding admin-guide">
+  <div class="guide-intro">
+    <h1>How to use the admin area</h1>
+    <p>
+      This guide is for ministry staff who manage the website day to day.
+      You do not need to be technical — it explains what each part of the dashboard does and how to work safely.
+    </p>
+  </div>
+
+  <ion-card class="security-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+        Who can access the dashboard?
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>No one gets admin access by signing up alone.</strong> That is deliberate — it protects the website.</p>
+      <ul class="guide-bullets">
+        <li>Someone may create an account on the admin login page, but they start as <strong>Pending</strong> with <strong>no access</strong> to the dashboard.</li>
+        <li>Only a current <strong>Super Admin</strong> or <strong>Admin</strong> can open <strong>User Management</strong> and assign a role.</li>
+        <li>Roles: <strong>Super Admin</strong> (Hatun — full access), <strong>Admin</strong> (most tools), <strong>Moderator</strong> (limited), <strong>User</strong> (no dashboard — future comments).</li>
+        <li>Until that happens, they cannot open the dashboard even with the correct password.</li>
+        <li>They must also <strong>verify their email</strong> before they can sign in as an admin.</li>
+      </ul>
+      <p class="guide-note">
+        If you need to add a helper, ask them to sign up (if they have not already), then go to
+        <strong>Quick Actions → User Management</strong> and assign their role. Do not share your password.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Signing in</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ol class="guide-steps">
+        <li>Use the admin login page your developer gave you.</li>
+        <li>Enter the email address an admin has approved for you.</li>
+        <li>Enter your password.</li>
+        <li>If asked, verify your email — you cannot use admin tools until that is done.</li>
+        <li>If your role is <strong>Super Admin</strong>, <strong>Admin</strong>, or <strong>Moderator</strong>, you arrive on the <strong>Admin Dashboard</strong>.</li>
+      </ol>
+      <p class="guide-note">
+        “Access denied” after login usually means your account is still <strong>Pending</strong> — ask an existing admin to approve you in User Management.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>User roles — what each level can do</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <dl class="guide-definitions">
+        <dt>Pending</dt>
+        <dd>Signed up but not approved. <strong>No dashboard access.</strong></dd>
+        <dt>User</dt>
+        <dd>Future public accounts (profiles, article comments). <strong>No dashboard access</strong> today.</dd>
+        <dt>Moderator</dt>
+        <dd>Limited dashboard — mainly YouTube settings. Most Quick Actions are hidden.</dd>
+        <dt>Admin</dt>
+        <dd>Most dashboard tools: content, welcome page, user management, emergency controls. (May be narrowed later.)</dd>
+        <dt>Super Admin</dt>
+        <dd><strong>Full access to everything.</strong> Hatun should hold this role.</dd>
+      </dl>
+      <p class="guide-note">Only Super Admin or Admin can assign roles in User Management.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>The numbers at the top</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-icon name="people-outline" slot="start" color="primary"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <strong>Users</strong> — how many people can log into admin.
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="mail-outline" slot="start" color="primary"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <strong>Messages</strong> — how many contact forms were submitted successfully.
+            This is <em>not</em> your email inbox — you will not see names or message text here.
+            Real messages go to your ministry email. Use <strong>Reply</strong> there to answer visitors.
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="newspaper-outline" slot="start" color="primary"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <strong>Newsletter</strong> — people who signed up for email updates.
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="analytics-outline" slot="start" color="primary"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <strong>Views</strong> — a rough count of visitors to the site.
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Quick Actions — what each button does</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <dl class="guide-definitions">
+        <dt>Create Content</dt>
+        <dd>Write a new article or page.</dd>
+        <dt>Archive Content</dt>
+        <dd>Add older or historical articles.</dd>
+        <dt>Manage Content</dt>
+        <dd>See all drafts and published articles; edit or remove them.</dd>
+        <dt>Youtube Settings</dt>
+        <dd>Connect your YouTube channel so new videos can become articles.</dd>
+        <dt>User Management</dt>
+        <dd>
+          <strong>Security:</strong> approve new helpers and set their role.
+          Options: Pending, User, Moderator, Admin, Super Admin.
+        </dd>
+        <dt>Welcome Page</dt>
+        <dd>Edit the home page visitors see first — text, images, social links, and giving buttons.</dd>
+        <dt>Site Management</dt>
+        <dd>Emergency controls — read-only mode, maintenance message, and similar (use carefully).</dd>
+      </dl>
+      <p class="guide-note">Quick Actions marked for full admins are shown to <strong>Super Admin</strong> and <strong>Admin</strong>. Moderators see a smaller set.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Recent Activity</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        A short list of what happened lately — articles published, contact forms received, newsletter sign-ups, and draft edits.
+        It helps you see that the site is active. It does <strong>not</strong> show the text of contact form messages (for privacy).
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Overall Usage</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        Shows how much space the website is using on our hosting plan (images, articles, and settings).
+        Yellow or red bars mean you are getting close to the free limit — tell your developer if that happens.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="highlight-card">
+    <ion-card-header>
+      <ion-card-title>Editing the Welcome Page (safe workflow)</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>Changes do <strong>not</strong> go live until you publish. Visitors keep seeing the old page until then.</p>
+      <ol class="guide-steps">
+        <li>Open <strong>Quick Actions → Welcome Page</strong>.</li>
+        <li>Edit text, images, social links, or support links.</li>
+        <li>Click <strong>Save draft</strong> — safe to leave and come back later.</li>
+        <li>Click <strong>Preview</strong> — opens how the page will look (yellow banner at top; not public yet).</li>
+        <li>When happy, click <strong>Publish live</strong> — visitors see the new page; Google’s copy updates shortly after.</li>
+      </ol>
+      <p><strong>Made a mistake?</strong> Scroll to <strong>Previous versions</strong> on the Welcome Page screen. You can load an older version into the editor or publish it again (up to 10 saved versions).</p>
+      <p><strong>Discard draft</strong> throws away unsaved work in the editor and reloads what is currently live.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Contact form messages</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ul class="guide-bullets">
+        <li>Messages are emailed <strong>directly to your ministry inbox</strong> — not stored as full text in the dashboard.</li>
+        <li>Use <strong>Reply</strong> in your email app to answer genuine visitors.</li>
+        <li>At the bottom of each contact form email there are links to report spam or ask your developer a question.</li>
+        <li>If the Messages count goes up but you did not receive email, contact your website developer.</li>
+      </ul>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>What this dashboard cannot do</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ul class="guide-bullets">
+        <li>Read contact form message bodies (by design — for visitor privacy).</li>
+        <li>Change your ministry email address — that is a developer or email-provider task.</li>
+        <li>Fix email delivery or hosting — contact your website developer.</li>
+      </ul>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Need help?</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>
+        For website problems, email your <strong>website developer</strong> (the technical contact for this site).
+        Use subject line <strong>Urgent: Hatun Website Question</strong> if it is urgent (site down, form broken, security worry).
+      </p>
+      <p class="guide-note">For normal ministry replies to visitors, use your email app — not the developer.</p>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

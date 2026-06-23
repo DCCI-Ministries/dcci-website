@@ -6,6 +6,8 @@ import { FooterComponent } from '../components/footer.component';
 import { VersionService } from '../services/version.service';
 import { ScrollService } from '../services/scroll.service';
 
+import { SITE_CONTACTS } from '../config/site-contacts';
+
 @Component({
   selector: 'app-terms',
   templateUrl: './terms.page.html',
@@ -21,6 +23,7 @@ import { ScrollService } from '../services/scroll.service';
 export class TermsPage implements AfterViewInit {
   @ViewChild(IonContent) content!: IonContent;
   version: string;
+  readonly contacts = SITE_CONTACTS;
 
   constructor(
     private versionService: VersionService,

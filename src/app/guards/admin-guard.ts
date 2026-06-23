@@ -5,9 +5,10 @@ import { map, switchMap, filter, take, catchError, combineLatest } from 'rxjs';
 import { Auth as FirebaseAuth } from '@angular/fire/auth';
 import { AuthService, AdminUser } from '../services/auth';
 import { SiteSettingsService } from '../services/site-settings.service';
+import { hasDashboardAccess } from '../models/user-roles';
 
 /**
- * Guard for pages that Admins and Moderators can access
+ * Guard for pages that dashboard users can access (Super Admin, Admin, Moderator).
  * Used for: Dashboard, YouTube Settings, Comments Settings (eventually)
  * NOTE: Nuclear lockdown blocks ALL access, including admins
  */
@@ -66,12 +67,11 @@ export const adminGuard: CanActivateFn = (route, state) => {
             return router.createUrlTree(['/admin/maintenance']);
           }
 
-          // Allow users with Admin or Moderator role
-          if (user && user.isAdmin && user.emailVerified &&
-              (user.userRole === 'Admin' || user.userRole === 'Moderator')) {
+          // Super Admin, Admin, or Moderator with verified email
+          if (user && user.isAdmin && user.emailVerified && hasDashboardAccess(user.userRole, user.isAdmin)) {
             return true;
           } else {
-            // Redirect to welcome page if not admin/moderator or email not verified
+            // Redirect to welcome page if no dashboard role or email not verified
             return router.createUrlTree(['/welcome']);
           }
         })

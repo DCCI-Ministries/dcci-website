@@ -7,6 +7,10 @@
           <h1>Admin Dashboard</h1>
           <p class="welcome-message">Welcome back, {{ currentUser?.email }}!</p>
           <div class="user-info">
+            <ion-chip class="superadmin-chip" *ngIf="currentUser?.userRole === 'SuperAdmin'">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+              <ion-label>Super Admin</ion-label>
+            </ion-chip>
             <ion-chip class="admin-chip" *ngIf="currentUser?.userRole === 'Admin'">
               <ion-icon name="shield-checkmark-outline"></ion-icon>
               <ion-label>Admin</ion-label>
@@ -22,6 +26,10 @@
           </div>
         </div>
         <div class="header-actions">
+          <ion-button fill="outline" (click)="navigateToAdminGuide()" class="guide-button">
+            <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+            How to use this
+          </ion-button>
           <ion-button fill="outline" (click)="logout()" class="logout-button">
             <ion-icon name="log-out-outline" slot="start"></ion-icon>
             Logout
@@ -110,6 +118,10 @@
             <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToUserManagement()" *ngIf="isFullAdmin()">
               <ion-icon name="people-outline" slot="start"></ion-icon>
               User Management
+            </ion-button>
+            <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToWelcomeSettings()" *ngIf="isFullAdmin()">
+              <ion-icon name="home-outline" slot="start"></ion-icon>
+              Welcome Page
             </ion-button>
             <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToEmergencyControls()" *ngIf="isFullAdmin()">
               <ion-icon name="settings-outline" slot="start"></ion-icon>
@@ -255,6 +267,9 @@
                   {{ stats.emailService === 'active' ? 'Active' : (stats.emailService === 'checking' ? 'Checking...' : 'Inactive') }}
                 </ion-label>
               </ion-chip>
+              <span *ngIf="stats.undeliveredEmailCount > 0" class="delivery-failure-hint">
+                {{ stats.undeliveredEmailCount }} undelivered (check Firestore → contactDeliveryFailures)
+              </span>
             </div>
             <div class="status-item" [class.warning-text]="stats.storagePercentUsed >= 80">
               <div class="status-indicator" [ngClass]="stats.storagePercentUsed >= 80 ? 'warning' : 'success'"></div>

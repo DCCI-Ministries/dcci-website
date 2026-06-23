@@ -67,7 +67,7 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewChecked {
   ngOnInit() {
     // Check if user is already logged in and is admin
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
-      if (user && user.isAdmin && user.emailVerified) {
+      if (user && user.emailVerified && this.authService.isAdmin()) {
         this.router.navigate(['/admin/dashboard']);
       }
     });

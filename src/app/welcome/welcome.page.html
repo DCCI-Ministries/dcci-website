@@ -1,14 +1,24 @@
-<ion-content [fullscreen]="true" class="welcome-page">
+<ion-content [fullscreen]="true" class="welcome-page" [class.welcome-preview-mode]="isPreviewMode">
+  @if (isPreviewMode) {
+  <div class="welcome-preview-banner">
+    @if (previewVersionId) {
+    <p><strong>Previewing saved version:</strong> {{ previewVersionTitle }} — the live site is unchanged.</p>
+    } @else {
+    <p><strong>Preview</strong> — visitors still see the live welcome page until you publish.</p>
+    }
+    <ion-button size="small" fill="solid" (click)="backToEditor()">Back to editor</ion-button>
+  </div>
+  }
   <div class="welcome-container">
     <main id="main-content" role="main">
       <!-- Header Section -->
       <div class="header-section" [class.collapsed]="isScrolled">
         <a (click)="onLogoClick($event)" class="logo-area-link" [attr.aria-label]="'Go to top of page'">
           <div class="logo-area">
-            <img src="assets/icon/icon-no-text.webp" alt="" class="brand-logo" aria-hidden="true">
+            <img [src]="logoImageUrl" alt="" class="brand-logo" aria-hidden="true">
             <div class="ministry-text">
               <h1 class="ministry-name">DCCI MINISTRIES</h1>
-              <p class="ministry-tagline" *ngIf="!isScrolled">Defend Christ Critique Islam</p>
+              <p class="ministry-tagline" *ngIf="!isScrolled">{{ pageContent.headerTagline }}</p>
             </div>
           </div>
         </a>
@@ -20,10 +30,10 @@
       <!-- Hero Section -->
       <div class="hero-section">
         <div class="hero-content">
-          <h2 class="hero-title">Welcome to DCCI Ministries</h2>
-          <p class="hero-subtitle">Proclaiming Jesus Christ where truth is costly.</p>
+          <h2 class="hero-title">{{ pageContent.heroTitle }}</h2>
+          <p class="hero-subtitle">{{ pageContent.heroSubtitle }}</p>
           <div class="hero-image-container">
-            <img src="assets/icon/hero.webp" alt="DCCI Ministries hero image representing our mission to defend Christ and critique Islam through respectful dialogue" class="hero-image">
+            <img [src]="heroImageUrl" alt="DCCI Ministries hero image representing our mission to defend Christ and critique Islam through respectful dialogue" class="hero-image">
           </div>
         </div>
       </div>
@@ -34,37 +44,10 @@
           <div class="mission-icon-wrapper">
             <ion-icon name="information-circle-outline" class="mission-icon"></ion-icon>
           </div>
-          <h3>Our Mission</h3>
-          <p>
-            Our motivation is love for Muslims to bring them to repentance and faith in Christ for eternal life. We seek to preach the Gospel to Muslims using apologetics and polemics, regularly engaging with Muslims at Speakers Corner.</p><p>
-
-Like the Apostle Paul, "we do not use deception, nor do we distort the Word of God" (2 Cor 4:2). Rather "we demolish arguments and every pretension that sets itself up against the knowledge of God."
-          </p>
+          <h3>{{ pageContent.missionHeading }}</h3>
+          <div class="welcome-rich-content mission-body" [innerHTML]="sanitizedMissionContent"></div>
         </div>
       </div>
-
-      <!-- Features Section -->
-      <!-- <div class="features-section">
-        <h3>What We Offer</h3>
-        <p class="features-intro">This ministry exists to proclaim Jesus Christ where speaking freely can carry a cost.</p>
-        <div class="features-grid">
-          <div class="feature-card">
-            <ion-icon name="videocam-outline" class="feature-icon"></ion-icon>
-            <h4>Apologetics & Public Witness</h4>
-            <p>Engaging Islam and false teaching with Christ-centered apologetics through teaching, dialogue, and public witness.</p>
-          </div>
-          <div class="feature-card">
-            <ion-icon name="heart-outline" class="feature-icon"></ion-icon>
-            <h4>Support for Seekers & the Persecuted</h4>
-            <p>Encouragement and clarity for those questioning Islam, facing pressure, or seeking truth—especially converts and those at risk.</p>
-          </div>
-          <div class="feature-card">
-            <ion-icon name="archive-outline" class="feature-icon"></ion-icon>
-            <h4>Teaching Archive & Study Resources</h4>
-            <p>A curated library of videos and articles to help you understand the Gospel, respond thoughtfully, and grow in faith.</p>
-          </div>
-        </div>
-      </div> -->
 
       <!-- Content Carousel Section -->
       <app-content-carousel></app-content-carousel>
@@ -81,22 +64,16 @@ Like the Apostle Paul, "we do not use deception, nor do we distort the Word of G
       <div class="social-section">
         <div class="social-card">
           <ion-icon name="share-social-outline" class="social-icon"></ion-icon>
-          <h3>Stay Connected</h3>
-          <p>Follow us on social media for ministry updates and announcements.</p>
+          <h3>{{ pageContent.socialHeading }}</h3>
+          <div class="welcome-rich-content social-body" [innerHTML]="sanitizedSocialContent"></div>
 
           <div class="social-links">
-            <a href="https://www.youtube.com/@DCCIMinistries" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="YouTube">
-              <ion-icon name="logo-youtube"></ion-icon>
-              <span class="social-label">YouTube</span>
+            @for (link of pageContent.socialLinks; track link.url + link.label) {
+            <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="social-link" [attr.aria-label]="link.label">
+              <ion-icon [name]="linkIcon(link)"></ion-icon>
+              <span class="social-label">{{ link.label }}</span>
             </a>
-            <a href="https://rumble.com/user/DCCIMinistries" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Rumble">
-              <ion-icon name="play-circle-outline"></ion-icon>
-              <span class="social-label">Rumble</span>
-            </a>
-            <a href="https://twitter.com/dcciministries" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="X (formerly Twitter)">
-              <ion-icon name="close-outline"></ion-icon>
-              <span class="social-label">X</span>
-            </a>
+            }
           </div>
         </div>
       </div>
@@ -105,22 +82,16 @@ Like the Apostle Paul, "we do not use deception, nor do we distort the Word of G
       <div class="support-section">
         <div id="support-section" class="support-card">
           <ion-icon name="heart-outline" class="support-icon"></ion-icon>
-          <h3>Support This Ministry</h3>
-          <p>Your generosity helps us continue proclaiming the Gospel and supporting those who are seeking truth.</p>
+          <h3>{{ pageContent.supportHeading }}</h3>
+          <div class="welcome-rich-content support-body" [innerHTML]="sanitizedSupportContent"></div>
 
           <div class="support-links">
-            <a href="https://paypal.me/dcciministries2019?locale.x=en_GB" target="_blank" rel="noopener noreferrer" class="support-link" aria-label="PayPal">
-              <ion-icon name="card-outline"></ion-icon>
-              <span class="support-label">PayPal</span>
+            @for (link of pageContent.supportLinks; track link.url + link.label) {
+            <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="support-link" [attr.aria-label]="link.label">
+              <ion-icon [name]="linkIcon(link)"></ion-icon>
+              <span class="support-label">{{ link.label }}</span>
             </a>
-            <a href="https://patreon.com/HatunTash" target="_blank" rel="noopener noreferrer" class="support-link" aria-label="Patreon">
-              <ion-icon name="heart-outline"></ion-icon>
-              <span class="support-label">Patreon</span>
-            </a>
-            <a href="https://cash.app/$HatunTashDCCI" target="_blank" rel="noopener noreferrer" class="support-link" aria-label="CashApp">
-              <ion-icon name="wallet-outline"></ion-icon>
-              <span class="support-label">CashApp</span>
-            </a>
+            }
           </div>
         </div>
       </div>
@@ -128,8 +99,8 @@ Like the Apostle Paul, "we do not use deception, nor do we distort the Word of G
       <!-- Testimony Statement -->
       <div class="testimony-section">
         <div class="testimony-card">
-          <p class="testimony-statement">Jesus is LORD</p>
-          <p class="testimony-verse">John 20:31 but these are written so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in his name</p>
+          <p class="testimony-statement">{{ pageContent.testimonyStatement }}</p>
+          <div class="testimony-verse welcome-rich-content" [innerHTML]="sanitizedTestimonyVerse"></div>
         </div>
       </div>
 

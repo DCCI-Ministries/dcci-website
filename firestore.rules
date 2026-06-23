@@ -1,18 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Contacts collection - contact form submissions
+    // Contacts collection - metadata only (timestamp + newsletter opt-in flag; no message content)
     match /contacts/{document} {
-      // Allow anyone to create (for public contact form submissions)
-      // Block writes if site is in read-only mode
-      allow create: if !siteIsReadOnly();
+      allow create: if false;
 
-      // Only admins can read contact submissions (for dashboard activity)
-      // No public reads - this data is private
       allow read: if isAdminUser();
 
-      // Deny update and delete (immutable once created)
       allow update, delete: if false;
+    }
+
+    // IP-only rate limits for contact form cooldown (written by Cloud Functions only)
+    match /contactRateLimits/{document} {
+      allow read, write: if false;
+    }
+
+    // Per-email daily rate limits for contact form (metadata only, Cloud Functions only)
+    match /contactEmailRateLimits/{document} {
+      allow read, write: if false;
+    }
+
+    // Contact form email delivery failures (metadata only — Cloud Functions only)
+    match /contactDeliveryFailures/{document} {
+      allow read: if isAdminUser();
+      allow create, update, delete: if false;
     }
 
     // Subscribers collection - newsletter subscriptions
@@ -31,25 +42,36 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Helper function to check if the current user is an admin
-    // Hardened with exists() check before get() to avoid errors
-    function isAdminUser() {
+    // Dashboard roles: SuperAdmin, Admin, Moderator (isAdmin must be true).
+    // Excludes Pending/User even if isAdmin were set incorrectly.
+    function hasDashboardRole() {
+      let userDoc = get(/databases/$(database)/documents/adminUsers/$(request.auth.uid));
       return request.auth != null &&
              request.auth.uid != null &&
              exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.isAdmin == true;
+             userDoc.data.isAdmin == true &&
+             (userDoc.data.userRole == 'SuperAdmin' ||
+              userDoc.data.userRole == 'Admin' ||
+              userDoc.data.userRole == 'Moderator' ||
+              !userDoc.data.keys().hasAny(['userRole']));
     }
 
-    // Helper function to check if the current user is a full Admin (not Moderator)
-    // Used for operations that require full admin privileges (like user deletion)
-    // Also allows users with isAdmin == true but no userRole set (for backwards compatibility)
+    // Any dashboard role (SuperAdmin, Admin, Moderator) — same privileges as legacy isAdmin check
+    function isAdminUser() {
+      return hasDashboardRole();
+    }
+
+    // Full dashboard access: Super Admin or Admin (not Moderator).
+    // SuperAdmin has the same Firestore privileges as Admin today; may diverge later.
     function isFullAdmin() {
       let userDoc = get(/databases/$(database)/documents/adminUsers/$(request.auth.uid));
       return request.auth != null &&
              request.auth.uid != null &&
              exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid)) &&
              userDoc.data.isAdmin == true &&
-             (userDoc.data.userRole == 'Admin' || userDoc.data.userRole != 'Moderator');
+             (userDoc.data.userRole == 'Admin' ||
+              userDoc.data.userRole == 'SuperAdmin' ||
+              !userDoc.data.keys().hasAny(['userRole']));
     }
 
     // Helper function to check if site is in read-only mode or nuclear lockdown
@@ -85,23 +107,23 @@ service cloud.firestore {
 
     // Admin users collection - for CMS authentication
     match /adminUsers/{userId} {
-      // Allow authenticated users to create their own admin user document
-      // Block if site is in read-only mode (registration disabled)
+      // New sign-ups must start as Pending with no dashboard access (enforced server-side)
       allow create: if request.auth != null &&
         request.auth.uid == userId &&
-        !siteIsReadOnly();
+        !siteIsReadOnly() &&
+        request.resource.data.isAdmin == false &&
+        request.resource.data.userRole == 'Pending' &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() > 0;
 
-      // Allow users to update their own document
-      // Specifically allow updating emailVerified from false to true (for email verification flow)
-      // Allow admins to update any user document (for user management)
-      // Block writes if site is in read-only mode (except email verification updates and admin updates)
+      // Own doc: email verification / last login only — cannot change isAdmin or userRole
+      // Full admins (SuperAdmin, Admin): user management and any field updates
       allow update: if (
-        // User updating only their own emailVerified/emailVerifiedAt fields (always allowed for verification)
-        (request.auth != null && request.auth.uid == userId &&
-         request.resource.data.diff(resource.data).changedKeys().hasOnly(['emailVerified', 'emailVerifiedAt']) &&
-         request.resource.data.emailVerified == true) ||
-        // Admins can update any user document (always allowed)
-        (isAdminUser() && !siteIsReadOnly())
+        request.auth != null &&
+        request.auth.uid == userId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'userRole'])
+      ) || (
+        isFullAdmin() && !siteIsReadOnly()
       );
 
       // CRITICAL: Allow users to read their own document (required for isAdminUser() to work)
@@ -159,8 +181,7 @@ service cloud.firestore {
 
     // Site settings collection - emergency site controls
     match /siteSettings/{settingId} {
-      // Allow all users to read site settings (needed for maintenance mode check)
-      // This must work even when document doesn't exist yet
+      // Public welcome + emergency settings; drafts/versions live under adminSettings
       allow read: if true;
 
       // Only full admins can create/update emergency settings
@@ -171,6 +192,21 @@ service cloud.firestore {
 
       // Deny delete operations
       allow delete: if false;
+    }
+
+    // Welcome page draft + version history (admin only — not public)
+    match /adminSettings/welcomeDraft {
+      allow read, create, update, delete: if isFullAdmin();
+    }
+
+    // Placeholder parent doc for welcome version subcollection
+    match /adminSettings/welcomeVersions {
+      allow read, create, update: if isFullAdmin();
+      allow delete: if false;
+    }
+
+    match /adminSettings/welcomeVersions/versions/{versionId} {
+      allow read, create, update, delete: if isFullAdmin();
     }
 
     // Content collection - articles and blog posts

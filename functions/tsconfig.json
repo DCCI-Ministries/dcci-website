@@ -8,10 +8,18 @@
     "strict": false,
     "target": "es2017",
     "lib": ["es2017"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
   "compileOnSave": true,
   "include": [
-    "src"
+    "src/index.ts",
+    "src/sanitization.ts",
+    "src/contact-delivery-log.ts",
+    "src/contact-dev-report.ts",
+    "src/contact-recovery.ts",
+    "src/contact-blocklist.ts",
+    "src/contact-security.ts",
+    "src/site-contacts.ts"
   ]
 }

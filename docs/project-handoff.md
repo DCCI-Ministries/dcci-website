@@ -43,6 +43,22 @@
 - **Access**: Full repository access required
 - **Branches**: main (production), develop (development)
 
+## 📧 Website / technical contact (developer handoff)
+
+UK and EU visitors must be able to reach someone about **website, accessibility, and technical/privacy** matters. That address is **not** the ministry’s main content inbox.
+
+| Address type | Config field | Who owns it |
+|--------------|--------------|-------------|
+| Ministry / content | `ministryInfoEmail` | DCCI Ministries |
+| Visitor contact form | `contactFormRecipientEmail` | Ministry (Hatun) |
+| Website / technical | `technicalAdminEmail` | **You** (the site maintainer) |
+
+**When you take over:** follow **[Technical Contact Handoff](./technical-contact-handoff.md)** — edit `technicalAdminEmail` in **both** [`config/site-contacts.json`](../config/site-contacts.json) and [`functions/src/config/site-contacts.json`](../functions/src/config/site-contacts.json), set `technicalSuccessionContactEmail` to the outgoing developer, update [`config/succession-chain.md`](../config/succession-chain.md), then build and deploy.
+
+**Contact form operations:** Recipients come from `site-contacts.json` (not Firebase `mail.to`). SMTP uses `mail.user` / `mail.pass` only. To block a harasser, edit [`config/contact-blocklist.json`](../config/contact-blocklist.json) and the functions copy — see the handoff guide.
+
+If you need the previous maintainer urgently, email them with subject **`Urgent: Hatun Website Question`** (see succession-chain doc).
+
 ## 🏗️ Technical Architecture
 
 ### **Technology Stack**

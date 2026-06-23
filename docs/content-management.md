@@ -13,11 +13,61 @@ The DCCI Ministries website uses a custom Content Management System (CMS) built 
 
 ### **Manual Content**
 - **Custom Articles**: Written using Quill editor
+- **Welcome Page**: Editable sections via Admin → Welcome Page (see below)
 - **Static Pages**: About, Contact, Legal pages
 - **Media Galleries**: Image and video collections
 - **Blog Posts**: Regular ministry updates
 
-## ✍️ Using the Quill Editor
+## Editing the Welcome Page
+
+Full **Admin** users can edit the public welcome page without changing its look or breaking SEO.
+
+### **How to open the editor**
+1. Log into the admin dashboard
+2. Under **Quick Actions**, click **Welcome Page**
+3. Or go directly to `/admin/welcome-settings`
+
+See **[Admin Dashboard — Welcome Page](./admin-dashboard.md#welcome-page-editor)** for the full draft → preview → publish workflow and how to roll back to a previous version.
+
+### **Recommended workflow**
+1. Edit sections in the admin form
+2. **Save draft** — safe to leave; visitors still see the old page
+3. **Preview** — opens `/admin/welcome-preview` (admin-only, yellow banner)
+4. If it looks good, **Publish live** — updates `/welcome` and rebuilds the SEO page for Google
+5. If you dislike the result, use **Previous versions** → **Load into editor** or **Publish** an older snapshot
+
+### **What you can edit**
+| Section | Editor type |
+|---------|-------------|
+| Header tagline | Text field |
+| Logo image | Upload (Firebase Storage) |
+| Hero title & subtitle | Text fields |
+| Hero banner image | Upload (Firebase Storage) |
+| Mission | Heading + Quill body (images supported) |
+| Social media intro | Heading + Quill body |
+| Social links | Add/remove links — each has **button label**, **URL**, and **icon** |
+| Support intro | Heading + Quill body |
+| Support links | Add/remove links — each has **button label**, **URL**, and **icon** |
+| Testimony statement & verse | Text + Quill |
+| SEO title & description | Text fields (for search engines) |
+
+**Not editable in this screen** (built into the page layout): contact form, newsletter signup, content carousel, footer.
+
+### **How it works**
+- **Draft:** Save changes without affecting the live `/welcome` page
+- **Preview:** Opens an admin-only preview of your draft (`/admin/welcome-preview`)
+- **Publish live:** Replaces the public page and triggers an SEO rebuild
+- **Version history:** Each publish archives the previous live page (last 10) — load into the editor or publish again
+
+### **Storage**
+- **Live:** Firestore `siteSettings/welcome` (public read)
+- **Draft:** `adminSettings/welcomeDraft` (admin only)
+- **Versions:** `adminSettings/welcomeVersions/versions/{id}` (admin only)
+
+### **Read-only mode**
+If the site is in **read-only mode** (Site Management / Emergency Controls), Save draft, Preview, and Publish are disabled.
+
+---
 
 ### **Editor Interface**
 The Quill editor provides a familiar, Word-like experience with these features:

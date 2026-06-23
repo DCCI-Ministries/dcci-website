@@ -1,0 +1,104 @@
+.admin-guide {
+  --guide-max-width: 720px;
+
+  .guide-intro {
+    max-width: var(--guide-max-width);
+    margin: 0 auto 20px;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+      margin: 0 0 12px;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.55;
+      color: var(--ion-color-medium-shade);
+    }
+  }
+
+  ion-card {
+    max-width: var(--guide-max-width);
+    margin: 0 auto 16px;
+  }
+
+  .highlight-card {
+    border-left: 4px solid var(--ion-color-primary);
+  }
+
+  .security-card {
+    border-left: 4px solid var(--ion-color-success);
+    background: rgba(var(--ion-color-success-rgb), 0.06);
+
+    ion-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      ion-icon {
+        font-size: 1.25rem;
+        color: var(--ion-color-success);
+      }
+    }
+  }
+
+  .guide-steps {
+    margin: 0 0 12px;
+    padding-left: 1.25rem;
+    line-height: 1.6;
+
+    li + li {
+      margin-top: 8px;
+    }
+  }
+
+  .guide-bullets {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 1.6;
+
+    li + li {
+      margin-top: 8px;
+    }
+  }
+
+  .guide-note {
+    margin: 12px 0 0;
+    font-size: 0.95rem;
+    color: var(--ion-color-medium);
+    line-height: 1.5;
+  }
+
+  .guide-definitions {
+    margin: 0;
+
+    dt {
+      font-weight: 600;
+      margin-top: 12px;
+      color: var(--ion-color-primary);
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    dd {
+      margin: 4px 0 0;
+      line-height: 1.5;
+      color: var(--ion-text-color);
+    }
+  }
+
+  ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    margin-bottom: 8px;
+
+    ion-icon {
+      margin-inline-end: 12px;
+      font-size: 1.25rem;
+    }
+  }
+}

@@ -18,6 +18,7 @@ export function registerIonicons(): void {
   addIcons({
     // ✱ include EVERY name you use in templates:
     'home-outline': i.homeOutline,
+    'image-outline': i.imageOutline,
     'construct-outline': i.constructOutline,
     'hammer-outline': i.hammerOutline,
     'videocam-outline': i.videocamOutline,
@@ -30,12 +31,18 @@ export function registerIonicons(): void {
     'information-circle-outline': i.informationCircleOutline,
     'mail-outline': i.mailOutline,
     'logo-youtube': i.logoYoutube,
+    'logo-twitter': i.logoTwitter,
+    'logo-facebook': i.logoFacebook,
+    'logo-instagram': i.logoInstagram,
     'play-circle-outline': i.playCircleOutline,
     'card-outline': i.cardOutline,
     'heart-outline': i.heartOutline,
     'close-outline': i.closeOutline,
     'close': i.close,
     'wallet-outline': i.walletOutline,
+    'link-outline': i.linkOutline,
+    'globe-outline': i.globeOutline,
+    'add-outline': i.addOutline,
     'time-outline': i.timeOutline,
     // Contact form icons
     'share-social-outline': i.shareSocialOutline,

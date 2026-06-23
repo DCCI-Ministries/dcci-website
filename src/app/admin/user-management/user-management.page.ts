@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { AuthService, AdminUser } from '../../services/auth';
 import { UserManagementService } from '../../services/user-management.service';
 import { firstValueFrom } from 'rxjs';
+import { UserRole, getRoleColor, getRoleDisplayName } from '../../models/user-roles';
 
 @Component({
   selector: 'app-user-management',
@@ -74,8 +75,8 @@ export class UserManagementPage implements OnInit, OnDestroy {
       return;
     }
     
-    // Check if user is admin
-    if (!user.isAdmin) {
+    // Check if user is admin with dashboard role
+    if (!this.authService.isAdmin()) {
       await this.showToast('Access denied. Admin privileges required.', 'danger');
       this.router.navigate(['/admin/dashboard']);
       return;
@@ -114,7 +115,7 @@ export class UserManagementPage implements OnInit, OnDestroy {
     }
   }
 
-  async onRoleChange(user: AdminUser, newRole: 'Pending' | 'Admin' | 'Moderator' | null) {
+  async onRoleChange(user: AdminUser, newRole: UserRole) {
     // Prevent changing your own role
     if (user.uid === this.currentUser?.uid) {
       await this.showToast('You cannot change your own role', 'warning');
@@ -131,22 +132,35 @@ export class UserManagementPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Show confirmation for Admin or Moderator role assignment
-    if (newRole === 'Admin') {
+    // Show confirmation for privileged role assignment
+    if (newRole === 'SuperAdmin') {
       const alert = await this.alertController.create({
-        header: 'Assign Admin Role',
-        message: `Are you sure you want to assign Admin role to ${user.email}? This will grant full administrative access.`,
+        header: 'Assign Super Admin Role',
+        message: `Assign Super Admin to ${user.email}? This grants full access to every dashboard feature. Ministry lead (Hatun) should hold this role.`,
         buttons: [
           {
             text: 'Cancel',
             role: 'cancel',
-            handler: () => {
-              // Reset dropdown to previous value on cancel
-              const userIndex = this.users.findIndex(u => u.uid === user.uid);
-              if (userIndex !== -1) {
-                this.users[userIndex].userRole = user.userRole || 'Pending';
-              }
+            handler: () => this.resetRoleDropdown(user)
+          },
+          {
+            text: 'Assign Super Admin',
+            handler: async () => {
+              await this.updateUserRole(user, newRole);
             }
+          }
+        ]
+      });
+      await alert.present();
+    } else if (newRole === 'Admin') {
+      const alert = await this.alertController.create({
+        header: 'Assign Admin Role',
+        message: `Assign Admin to ${user.email}? This grants access to most dashboard features (content, welcome page, user management).`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: () => this.resetRoleDropdown(user)
           },
           {
             text: 'Assign Admin',
@@ -160,21 +174,34 @@ export class UserManagementPage implements OnInit, OnDestroy {
     } else if (newRole === 'Moderator') {
       const alert = await this.alertController.create({
         header: 'Assign Moderator Role',
-        message: `Are you sure you want to assign Moderator role to ${user.email}? This will grant limited administrative access (YouTube Settings, Comments Settings).`,
+        message: `Assign Moderator to ${user.email}? Limited dashboard access only (e.g. YouTube settings). Most admin tools stay hidden.`,
         buttons: [
           {
             text: 'Cancel',
             role: 'cancel',
-            handler: () => {
-              // Reset dropdown to previous value on cancel
-              const userIndex = this.users.findIndex(u => u.uid === user.uid);
-              if (userIndex !== -1) {
-                this.users[userIndex].userRole = user.userRole || 'Pending';
-              }
-            }
+            handler: () => this.resetRoleDropdown(user)
           },
           {
             text: 'Assign Moderator',
+            handler: async () => {
+              await this.updateUserRole(user, newRole);
+            }
+          }
+        ]
+      });
+      await alert.present();
+    } else if (newRole === 'User') {
+      const alert = await this.alertController.create({
+        header: 'Assign User Role',
+        message: `Assign User to ${user.email}? No dashboard access. Profiles and article comments are a future feature.`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: () => this.resetRoleDropdown(user)
+          },
+          {
+            text: 'Assign User',
             handler: async () => {
               await this.updateUserRole(user, newRole);
             }
@@ -187,7 +214,14 @@ export class UserManagementPage implements OnInit, OnDestroy {
     }
   }
 
-  async updateUserRole(user: AdminUser, role: 'Pending' | 'Admin' | 'Moderator' | null) {
+  private resetRoleDropdown(user: AdminUser) {
+    const userIndex = this.users.findIndex(u => u.uid === user.uid);
+    if (userIndex !== -1) {
+      this.users[userIndex].userRole = user.userRole || 'Pending';
+    }
+  }
+
+  async updateUserRole(user: AdminUser, role: UserRole) {
     if (this.isSaving) return;
 
     this.isSaving = true;
@@ -213,16 +247,8 @@ export class UserManagementPage implements OnInit, OnDestroy {
     }
   }
 
-  getRoleDisplayName(role: 'Pending' | 'Admin' | 'Moderator' | null | undefined): string {
-    if (!role) return 'Pending';
-    return role;
-  }
-
-  getRoleColor(role: 'Pending' | 'Admin' | 'Moderator' | null | undefined): string {
-    if (role === 'Admin') return 'success';
-    if (role === 'Moderator') return 'warning';
-    return 'medium';
-  }
+  getRoleDisplayName = getRoleDisplayName;
+  getRoleColor = getRoleColor;
 
   async confirmDeleteUser(user: AdminUser) {
     // Prevent deleting yourself

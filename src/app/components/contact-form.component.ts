@@ -116,17 +116,7 @@ export class ContactFormComponent implements OnInit, OnDestroy {
         this.submitSuccess = true;
         this.contactForm.reset();
       } catch (error: any) {
-        // Check for VPN detection error
-        if (error.error?.error === 'VPN detected') {
-          this.submitError = error.error.message || 'VPN detected. Please turn off your VPN and try again.';
-        }
-        // Check for input validation errors
-        else if (error.error?.error === 'Invalid input' && error.error?.details) {
-          this.submitError = 'Please check your input: ' + error.error.details.join(', ');
-        }
-        else {
-          this.submitError = 'Failed to send message. Please try again.';
-        }
+        this.submitError = this.formatContactFormError(error);
         console.error('Contact form submission error:', error);
       } finally {
         this.isSubmitting = false;
@@ -134,6 +124,27 @@ export class ContactFormComponent implements OnInit, OnDestroy {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  private formatContactFormError(error: any): string {
+    const body = error?.error;
+    if (!body) {
+      return 'Failed to send message. Please check your connection and try again.';
+    }
+
+    if (body.message) {
+      return body.message;
+    }
+
+    if (body.error === 'invalid_input' && Array.isArray(body.details) && body.details.length > 0) {
+      return body.details.join(' ');
+    }
+
+    if (body.error === 'Invalid input' && Array.isArray(body.details) && body.details.length > 0) {
+      return body.details.join(' ');
+    }
+
+    return 'Failed to send message. Please try again.';
   }
 
   private markFormGroupTouched() {

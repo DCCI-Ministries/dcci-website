@@ -4,6 +4,7 @@
  */
 
 import { getFirestoreAdmin } from './firebaseAdmin';
+import { DEFAULT_WELCOME_CONTENT, mergeWelcomeContent, WelcomePageContent } from './welcomeContent';
 
 /**
  * Article interface matching Firestore schema
@@ -173,6 +174,24 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   } catch (error) {
     console.error('Error fetching article by slug:', error);
     return null;
+  }
+}
+
+/**
+ * Get welcome page content for static SEO page generation
+ */
+export async function getWelcomePageContent(): Promise<WelcomePageContent> {
+  const db = getFirestoreAdmin();
+
+  try {
+    const doc = await db.collection('siteSettings').doc('welcome').get();
+    if (!doc.exists) {
+      return DEFAULT_WELCOME_CONTENT;
+    }
+    return mergeWelcomeContent(doc.data() as Partial<WelcomePageContent>);
+  } catch (error) {
+    console.error('Error fetching welcome page content:', error);
+    return DEFAULT_WELCOME_CONTENT;
   }
 }
 

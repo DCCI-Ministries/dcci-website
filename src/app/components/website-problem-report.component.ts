@@ -114,15 +114,9 @@ export class WebsiteProblemReportComponent implements OnInit, OnDestroy {
         this.submitSuccess = true;
         this.problemReportForm.reset();
       } catch (error: any) {
-        // Check for VPN detection error
-        if (error.error?.error === 'VPN detected') {
-          this.submitError = error.error.message || 'VPN detected. Please turn off your VPN and try again.';
-        }
-        // Check for input validation errors
-        else if (error.error?.error === 'Invalid input' && error.error?.details) {
+        if (error.error?.error === 'Invalid input' && error.error?.details) {
           this.submitError = 'Please check your input: ' + error.error.details.join(', ');
-        }
-        else {
+        } else {
           this.submitError = 'Failed to send problem report. Please try again.';
         }
         console.error('Website problem report submission error:', error);

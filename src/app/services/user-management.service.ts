@@ -5,13 +5,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService, AdminUser } from './auth';
 import { environment } from '../../environments/environment';
+import { SITE_CONTACTS } from '../config/site-contacts';
+import { UserRole, roleGrantsIsAdmin } from '../models/user-roles';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserManagementService {
   // Allowed emails for user management access (extra security layer)
-  private readonly ALLOWED_EMAILS = ['admin@accessiblewebmedia.com', 'hatun@dcciministries.com']; // Add Hatun email later
+  private readonly ALLOWED_EMAILS = [
+    SITE_CONTACTS.technicalAdminEmail,
+    SITE_CONTACTS.contactFormRecipientEmail
+  ];
 
   constructor(
     private firestore: Firestore,
@@ -117,27 +122,20 @@ export class UserManagementService {
   }
 
   /**
-   * Update user role
-   * When setting role to "Admin" or "Moderator", updates both isAdmin and userRole
-   * When setting role to "Pending" or null, sets isAdmin to false
+   * Update user role.
+   * Dashboard roles (SuperAdmin, Admin, Moderator) set isAdmin true.
+   * Pending and User have no dashboard access.
    */
-  async updateUserRole(userId: string, role: 'Pending' | 'Admin' | 'Moderator' | null): Promise<void> {
+  async updateUserRole(userId: string, role: UserRole): Promise<void> {
     return await runInInjectionContext(this.injector, async () => {
       try {
         const userRef = doc(this.firestore, 'adminUsers', userId);
-        
-        // If role is "Admin" or "Moderator", set both isAdmin and userRole
-        // If role is "Pending" or null, set isAdmin to false and update userRole
-        const updateData: any = {
-          userRole: role
+
+        const updateData: { userRole: UserRole; isAdmin: boolean } = {
+          userRole: role,
+          isAdmin: roleGrantsIsAdmin(role)
         };
-        
-        if (role === 'Admin' || role === 'Moderator') {
-          updateData.isAdmin = true;
-        } else {
-          updateData.isAdmin = false;
-        }
-        
+
         await updateDoc(userRef, updateData);
       } catch (error) {
         console.error('Error updating user role:', error);

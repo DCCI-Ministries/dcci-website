@@ -1,7 +1,9 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+import { SITE_CONTACTS } from '../lib/siteContacts';
 
+const contacts = SITE_CONTACTS;
 const canonicalUrl = absoluteUrl('/terms/');
 
 const seoData = {
@@ -68,9 +70,9 @@ const jsonLd = generateJSONLD(seoData);
 					<p><strong>CONTACT INFORMATION</strong></p>
 					<ul>
 						<li><strong>Privacy, content, or theological inquiries:</strong><br>
-							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+							<a href={`mailto:${contacts.ministryInfoEmail}`}>{contacts.ministryInfoEmail}</a></li>
 						<li><strong>Website, technical, or bug reports:</strong><br>
-							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+							<a href={`mailto:${contacts.technicalAdminEmail}`}>{contacts.technicalAdminEmail}</a></li>
 					</ul>
 				</div>
 			</section>
@@ -166,9 +168,9 @@ const jsonLd = generateJSONLD(seoData);
 				<div class="contact-info-box">
 					<ul>
 						<li><strong>Theological / content inquiries:</strong><br>
-							<a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+							<a href={`mailto:${contacts.ministryInfoEmail}`}>{contacts.ministryInfoEmail}</a></li>
 						<li><strong>Website, technical, or bug reports:</strong><br>
-							<a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+							<a href={`mailto:${contacts.technicalAdminEmail}`}>{contacts.technicalAdminEmail}</a></li>
 					</ul>
 				</div>
     </section>

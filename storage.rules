@@ -3,11 +3,19 @@ service firebase.storage {
   match /b/{bucket}/o {
     // Helper function to check if user is admin
     // This checks the Firestore adminUsers collection
-    function isAdminUser() {
+    function hasDashboardRole() {
       return request.auth != null &&
              request.auth.uid != null &&
              firestore.exists(/databases/(default)/documents/adminUsers/$(request.auth.uid)) &&
-             firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.isAdmin == true;
+             firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.isAdmin == true &&
+             (firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'SuperAdmin' ||
+              firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'Admin' ||
+              firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'Moderator' ||
+              !firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.keys().hasAny(['userRole']));
+    }
+
+    function isAdminUser() {
+      return hasDashboardRole();
     }
     
     // Thumbnails for content/articles
@@ -93,6 +101,38 @@ service firebase.storage {
                     request.auth.uid == userId;
     }
     
+    // Welcome page images (logo, hero banner, inline Quill images)
+    match /welcome-page/images/{userId}/{fileName} {
+      function isSafeImageType() {
+        return request.resource.contentType == 'image/jpeg' ||
+               request.resource.contentType == 'image/jpg' ||
+               request.resource.contentType == 'image/png' ||
+               request.resource.contentType == 'image/webp' ||
+               request.resource.contentType == 'image/bmp' ||
+               request.resource.contentType == 'image/tiff' ||
+               request.resource.contentType == 'image/tif' ||
+               request.resource.contentType == 'image/avif' ||
+               request.resource.contentType == 'image/heic' ||
+               request.resource.contentType == 'image/heif';
+      }
+
+      function hasSafeExtension() {
+        return fileName.matches('.*\\.(jpg|jpeg|png|webp|bmp|tiff|tif|avif|heic|heif)$');
+      }
+
+      allow read: if true;
+      allow write: if request.auth != null &&
+                   request.auth.uid == userId &&
+                   isAdminUser() &&
+                   request.resource.size < 5 * 1024 * 1024 &&
+                   request.resource.size > 0 &&
+                   isSafeImageType() &&
+                   hasSafeExtension();
+      allow delete: if request.auth != null &&
+                    isAdminUser() &&
+                    request.auth.uid == userId;
+    }
+
     // Deny all other paths
     match /{allPaths=**} {
       allow read, write: if false;
