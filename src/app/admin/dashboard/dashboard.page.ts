@@ -13,6 +13,7 @@ import { Firestore, collection, doc, getDoc, getDocs, query, where, orderBy, lim
 import { AuthService, AdminUser } from '../../services/auth';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { hasDashboardAccess } from '../../models/user-roles';
 
 interface DashboardStats {
   totalUsers: number;
@@ -96,9 +97,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
 
-      // Redirect if user is not admin/moderator or not verified
-      if (!user || !user.isAdmin || !user.emailVerified ||
-          (user.userRole !== 'Admin' && user.userRole !== 'Moderator')) {
+      // Redirect if user has no dashboard role or email not verified
+      if (!user || !user.isAdmin || !user.emailVerified || !hasDashboardAccess(user.userRole, user.isAdmin)) {
         this.router.navigate(['/welcome']);
       }
     });
@@ -543,6 +543,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/admin/welcome-settings']);
   }
 
+  navigateToAdminGuide() {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    this.router.navigate(['/admin/guide']);
+  }
+
   navigateToEmergencyControls() {
     // Blur any active element to prevent aria-hidden warnings during navigation
     if (document.activeElement instanceof HTMLElement) {
@@ -552,7 +559,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if current user is a full Admin (not Moderator)
+   * Full dashboard tools (Super Admin or Admin — not Moderator).
    */
   isFullAdmin(): boolean {
     return this.authService.isFullAdmin();

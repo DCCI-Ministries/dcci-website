@@ -44,6 +44,11 @@ export const routes: Routes = [
     canActivate: [maintenanceGuard, adminGuard]
   },
   {
+    path: 'admin/guide',
+    loadComponent: () => import('./admin/admin-guide/admin-guide.page').then( m => m.AdminGuidePage),
+    canActivate: [maintenanceGuard, adminGuard]
+  },
+  {
     path: 'admin/forgot-password',
     loadComponent: () => import('./admin/forgot-password/forgot-password.page').then( m => m.ForgotPasswordPage),
     canActivate: [maintenanceGuard]
@@ -107,6 +112,12 @@ export const routes: Routes = [
     path: 'admin/welcome-settings',
     loadComponent: () => import('./admin/welcome-settings/welcome-settings.page').then( m => m.WelcomeSettingsPage),
     canActivate: [maintenanceGuard, adminOnlyGuard]
+  },
+  {
+    path: 'admin/welcome-preview',
+    loadComponent: () => import('./welcome/welcome.page').then( m => m.WelcomePage),
+    canActivate: [maintenanceGuard, adminOnlyGuard],
+    data: { welcomePreview: true }
   },
   {
     path: 'article/:slug',

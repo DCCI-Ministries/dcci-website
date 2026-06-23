@@ -4,7 +4,8 @@
 
 ### Welcome Page — Admin-Editable Content (SEO-Safe)
 - **New admin screen:** Dashboard → **Welcome Page** (`/admin/welcome-settings`), full admins only
-- **Editable sections:** Header tagline, hero title/subtitle, mission, social blurb, support blurb, testimony, and SEO title/description
+- **Draft / preview / publish:** Edits stay in a draft until **Publish live**; **Preview** at `/admin/welcome-preview`; last 10 published snapshots kept for rollback
+- **Editable sections:** Header tagline, hero title/subtitle, mission, social blurb, support blurb, testimony, SEO title/description, custom social/support links
 - **Editors:** Quill rich-text for body sections; plain fields for headings and short text
 - **Storage:** Firestore `siteSettings/welcome` (public read for live page; full-admin write)
 - **Live site:** Angular welcome page loads content in real time; layout and styling unchanged
@@ -44,7 +45,7 @@
   - New section: contact form, spam protection, and global access (no reCAPTCHA, no VPN blocking, no full message storage in DB)
   - Accurate third-party / retention wording for contact form
 - **New** [docs/contact-form-privacy-and-reporting.md](./contact-form-privacy-and-reporting.md) — privacy tradeoffs, why no reCAPTCHA/VPN blocking, Hatun reporting guide for site manager
-- **Updated** [owners-guide.md](./owners-guide.md) — Hatun training summary, privacy bind explained
+- **New** [docs/admin-dashboard.md](./admin-dashboard.md) — dashboard sections, quick actions, welcome draft/preview/publish guide
 - **Updated** [CONTACT_FORM_SETUP.md](../CONTACT_FORM_SETUP.md) — design philosophy section
 - **New** [technical-contact-handoff.md](./technical-contact-handoff.md) — safe developer handoff for `technicalAdminEmail` (UK/EU technical contact)
 - **Updated** [config/README.md](../config/README.md) — links handoff guide; clarifies three email roles

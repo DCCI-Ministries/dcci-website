@@ -11,17 +11,19 @@ This directory contains comprehensive documentation for the DCCI Ministries webs
 - **[Technical Contact Handoff](./technical-contact-handoff.md)** - **Replace the website/technical email safely** (UK/EU contact requirements; do not change ministry inboxes)
 - **[Breaking Changes & Gotchas](./breaking-changes-gotchas.md)** - Critical breaking changes and common issues to watch for
 - **[Future-Proofing for Node 22+](./future-proofing-node22.md)** - Long-term maintenance and Node 22+ compatibility
+- **[Future Plans — Roles, Comments, Moderation](./future-plans.md)** - **Not implemented yet:** Creator role, User comments, Moderator probation
 - **[Project Handoff](./project-handoff.md)** - Essential information for new developers taking over the project
 
 ### 👥 **For Content Owners & Non-Technical Users**
 - **[Owner's Guide](./owners-guide.md)** - Non-technical guide for ministry owners and content managers
+- **[Admin Dashboard Guide](./admin-dashboard.md)** - **What each dashboard section does**; welcome page draft, preview, publish, and rollback. **In-app:** dashboard → **How to use this** (`/admin/guide`)
 - **[Content Management](./content-management.md)** - How to create, edit, and manage website content
 - **[Emergency Procedures](./emergency-procedures.md)** - Step-by-step procedures for critical situations
 
 ### 🛠️ **For Operations & Maintenance**
 - **[Troubleshooting](./troubleshooting.md)** - Common issues and their solutions
 - **[Emergency Procedures](./emergency-procedures.md)** - Critical incident response procedures
-- **[Admin Access and Email Guard](./admin-access-and-email-guard.md)** - How Firestore admin status and the email allowlist work together; why admins must be added to the guard to access User Management and other guard-gated features
+- **[Admin Access and Email Guard](./admin-access-and-email-guard.md)** - Roles (Super Admin, Admin, Moderator, User, Pending); email allowlist for User Management
 
 ### 📧 **Contact Form & Email**
 - **[Contact form — recovery & independence plan](./contact-form-recovery-and-independence-plan.md)** — **URGENT:** recover Firestore messages, fix Hatun delivery, remove dependency on developer email
@@ -31,7 +33,8 @@ This directory contains comprehensive documentation for the DCCI Ministries webs
 - **[Contact Form — Privacy and Reporting](./contact-form-privacy-and-reporting.md)** - Why no reCAPTCHA or VPN blocking; privacy tradeoffs; **Hatun reporting guide** for the site manager
 
 ### 🏠 **Welcome Page (Admin-Editable)**
-- Documented in **[Content Management — Editing the Welcome Page](./content-management.md#editing-the-welcome-page)** — admin-editable welcome page sections with Quill, Firestore storage, and Astro SEO rebuild
+- **[Admin Dashboard — Welcome Page](./admin-dashboard.md#welcome-page-editor)** — draft, preview, publish, version rollback (start here for Hatun)
+- **[Content Management — Editing the Welcome Page](./content-management.md#editing-the-welcome-page)** — field list, Quill editor, Firestore storage, SEO rebuild
 
 ## 🎯 **Quick Start for Developers**
 

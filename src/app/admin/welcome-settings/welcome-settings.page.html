@@ -11,7 +11,10 @@
   <div class="welcome-settings-form" *ngIf="!isLoading; else loadingState">
     <h2>Edit Welcome Page</h2>
     <p class="subtitle">
-      Update text, images, and sections on the public welcome page. Changes appear on the live site immediately and trigger an SEO rebuild for search engines.
+      Edit in a draft, preview your changes, then publish when ready. The live site only updates when you publish.
+      @if (hasDraft) {
+      <span class="draft-badge">Draft saved — not live yet</span>
+      }
     </p>
 
     <ion-card>
@@ -261,21 +264,104 @@
       </ion-card-content>
     </ion-card>
 
+    <ion-card class="version-history-card">
+      <ion-card-header>
+        <div class="version-card-header">
+          <ion-card-title>Version history &amp; rollback</ion-card-title>
+          <span class="version-count">{{ versions.length }} / {{ maxWelcomeVersions }} saved</span>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        @if (versionsLoadFailed) {
+        <div class="version-empty-state version-error-state">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          <p><strong>Could not load version history.</strong></p>
+          <p class="field-hint">Ask your developer to deploy Firestore rules, then refresh this page.</p>
+        </div>
+        } @else if (versions.length === 0) {
+        <div class="version-empty-state">
+          <ion-icon name="time-outline"></ion-icon>
+          <p><strong>No saved versions yet.</strong></p>
+          <p class="field-hint">
+            Each time you <strong>Publish live</strong>, the previous live page is saved here (up to {{ maxWelcomeVersions }}).
+            After your first publish you will have at least one backup to roll back to.
+          </p>
+        </div>
+        } @else {
+        <p class="field-hint">
+          Use <strong>Edit label</strong> to name each backup. <strong>Preview</strong> opens how it looked without changing your draft.
+          <strong>Load into editor</strong> or <strong>Publish</strong> to restore live. <strong>Delete</strong> removes a backup only.
+        </p>
+        <div class="version-list">
+          @for (version of versions; track version.versionId) {
+          <div class="version-row">
+            <div class="version-meta">
+              @if (version.displayTitle?.trim(); as customTitle) {
+              <strong class="version-custom-title">{{ customTitle }}</strong>
+              @if (version.displayDescription?.trim(); as customNote) {
+              <span class="version-label">{{ customNote }}</span>
+              }
+              <span class="version-archived-at">Archived {{ formatArchivedDate(version) }}</span>
+              } @else {
+              <strong>{{ formatArchivedDate(version) }}</strong>
+              @if (versionDisplaySubtitle(version); as subtitle) {
+              <span class="version-label">{{ subtitle }}</span>
+              }
+              }
+            </div>
+            <div class="version-actions">
+              <ion-button fill="outline" size="small" (click)="editVersionDetails(version)" [disabled]="isSaving || readOnlyMode">
+                Edit label
+              </ion-button>
+              <ion-button fill="outline" size="small" (click)="previewSavedVersion(version)" [disabled]="isSaving">
+                Preview
+              </ion-button>
+              <ion-button fill="outline" size="small" (click)="restoreVersionToEditor(version)" [disabled]="isSaving || readOnlyMode">
+                Load into editor
+              </ion-button>
+              <ion-button size="small" (click)="publishVersion(version)" [disabled]="isSaving || readOnlyMode">
+                Publish
+              </ion-button>
+              <ion-button fill="outline" color="danger" size="small" (click)="deleteVersion(version)" [disabled]="isSaving || readOnlyMode">
+                Delete
+              </ion-button>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </ion-card-content>
+    </ion-card>
+
     <div class="form-actions">
       <ion-button fill="outline" (click)="cancel()" [disabled]="isSaving">
         <ion-icon name="close-outline" slot="start"></ion-icon>
         Cancel
       </ion-button>
-      <ion-button (click)="save()" [disabled]="isSaving || readOnlyMode">
-        <ion-icon name="save-outline" slot="start"></ion-icon>
-        <span *ngIf="!isSaving">Save Welcome Page</span>
-        <span *ngIf="isSaving">Saving...</span>
+      @if (hasDraft) {
+      <ion-button fill="outline" color="medium" (click)="discardDraft()" [disabled]="isSaving || readOnlyMode">
+        Discard draft
+      </ion-button>
+      }
+      <ion-button fill="outline" (click)="saveDraft()" [disabled]="isSaving || readOnlyMode">
+        <ion-icon name="document-text-outline" slot="start"></ion-icon>
+        <span *ngIf="!(isSaving && savingAction === 'draft')">Save draft</span>
+        <span *ngIf="isSaving && savingAction === 'draft'">Saving...</span>
+      </ion-button>
+      <ion-button fill="outline" (click)="preview()" [disabled]="isSaving || readOnlyMode">
+        <ion-icon name="eye-outline" slot="start"></ion-icon>
+        Preview
+      </ion-button>
+      <ion-button (click)="publish()" [disabled]="isSaving || readOnlyMode">
+        <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+        <span *ngIf="!(isSaving && savingAction === 'publish')">Publish live</span>
+        <span *ngIf="isSaving && savingAction === 'publish'">Publishing...</span>
       </ion-button>
     </div>
 
     <div *ngIf="readOnlyMode" class="read-only-notice">
       <ion-icon name="lock-closed-outline"></ion-icon>
-      <p>Site is in read-only mode. Save is disabled.</p>
+      <p>Site is in read-only mode. Save, preview, and publish are disabled.</p>
     </div>
   </div>
 

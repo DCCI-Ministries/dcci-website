@@ -3,11 +3,19 @@ service firebase.storage {
   match /b/{bucket}/o {
     // Helper function to check if user is admin
     // This checks the Firestore adminUsers collection
-    function isAdminUser() {
+    function hasDashboardRole() {
       return request.auth != null &&
              request.auth.uid != null &&
              firestore.exists(/databases/(default)/documents/adminUsers/$(request.auth.uid)) &&
-             firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.isAdmin == true;
+             firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.isAdmin == true &&
+             (firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'SuperAdmin' ||
+              firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'Admin' ||
+              firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.userRole == 'Moderator' ||
+              !firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.keys().hasAny(['userRole']));
+    }
+
+    function isAdminUser() {
+      return hasDashboardRole();
     }
     
     // Thumbnails for content/articles

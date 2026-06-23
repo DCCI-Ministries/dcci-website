@@ -1,5 +1,6 @@
 import { Component, ViewChild, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent,
   IonButton,
@@ -36,6 +37,9 @@ export class WelcomePage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(IonContent) content!: IonContent;
   version: string;
   isScrolled = false;
+  isPreviewMode = false;
+  previewVersionId = '';
+  previewVersionTitle = '';
   pageContent: WelcomePageContent = mergeWelcomeContent(null);
   sanitizedMissionContent: SafeHtml = '';
   sanitizedSocialContent: SafeHtml = '';
@@ -51,12 +55,17 @@ export class WelcomePage implements OnInit, AfterViewInit, OnDestroy {
     private menuController: MenuController,
     private scrollService: ScrollService,
     private welcomeContentService: WelcomeContentService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.version = this.versionService.getVersion();
-    this.analyticsService.trackPageView('/welcome').catch(() => {
-      // Ignore tracking errors; already logged by service
-    });
+    this.isPreviewMode = this.route.snapshot.data['welcomePreview'] === true;
+    if (!this.isPreviewMode) {
+      this.analyticsService.trackPageView('/welcome').catch(() => {
+        // Ignore tracking errors; already logged by service
+      });
+    }
   }
 
   get logoImageUrl(): string {
@@ -68,17 +77,55 @@ export class WelcomePage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.welcomeContentService.initialize();
-    this.contentSubscription = this.welcomeContentService.content$.subscribe((content) => {
-      this.pageContent = content;
-      this.updateSanitizedContent(content);
-    });
+    if (this.isPreviewMode) {
+      void this.loadPreviewContent();
+    } else {
+      this.welcomeContentService.initialize();
+      this.contentSubscription = this.welcomeContentService.content$.subscribe((content) => {
+        this.pageContent = content;
+        this.updateSanitizedContent(content);
+      });
+    }
 
     this.scrollSubscription = this.scrollService.getScrollState().subscribe(
       isScrolled => {
         this.isScrolled = isScrolled;
       }
     );
+  }
+
+  backToEditor() {
+    this.router.navigate(['/admin/welcome-settings']);
+  }
+
+  private async loadPreviewContent() {
+    const versionId = this.route.snapshot.queryParamMap.get('versionId');
+    const versionTitle = this.route.snapshot.queryParamMap.get('versionTitle');
+
+    if (versionId) {
+      this.previewVersionId = versionId;
+      this.previewVersionTitle = versionTitle || 'Saved version';
+      try {
+        this.pageContent = await this.welcomeContentService.loadVersionContent(versionId);
+        this.updateSanitizedContent(this.pageContent);
+      } catch (error) {
+        console.error('Failed to load saved version preview:', error);
+        this.pageContent = mergeWelcomeContent(null);
+        this.updateSanitizedContent(this.pageContent);
+      }
+      return;
+    }
+
+    try {
+      const draft = await this.welcomeContentService.loadDraftContent();
+      const published = await this.welcomeContentService.loadPublishedContent();
+      this.pageContent = draft ?? published;
+      this.updateSanitizedContent(this.pageContent);
+    } catch (error) {
+      console.error('Failed to load welcome page preview:', error);
+      this.pageContent = mergeWelcomeContent(null);
+      this.updateSanitizedContent(this.pageContent);
+    }
   }
 
   async ngAfterViewInit() {

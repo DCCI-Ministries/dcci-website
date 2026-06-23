@@ -55,7 +55,21 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 - **Project Goals**: What you want the website to accomplish
 - **Timeline**: When you need things done
 
-## 📱 Daily Website Management
+### **Who can access the admin dashboard?**
+
+**Nobody gets dashboard access just by signing up.** Roles:
+
+| Role | Access |
+|------|--------|
+| **Pending** | None — awaiting approval |
+| **User** | None (future: profiles, article comments) |
+| **Moderator** | Limited dashboard (YouTube settings) |
+| **Admin** | Most dashboard tools (same as Super Admin for now) |
+| **Super Admin** | Full access — **Hatun** should have this role |
+
+A **Super Admin** or **Admin** assigns roles in **User Management**. See **[Admin Dashboard Guide](./admin-dashboard.md)** or in-app **How to use this**.
+
+---
 
 ### **What Happens Automatically**
 - **YouTube Videos**: New videos automatically become website articles
@@ -64,7 +78,8 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 - **Performance**: Website speed is monitored and optimized
 
 ### **What You Can Do Manually**
-- **Edit the Welcome Page**: Dashboard → Welcome Page (hero, mission, testimony, SEO text)
+- **Admin dashboard**: Overview of users, message counts, newsletter sign-ups, and quick links to every admin tool. Click **How to use this** on the dashboard for the built-in guide.
+- **Edit the Welcome Page**: Dashboard → Welcome Page — save a **draft**, **preview**, then **publish**; roll back from version history if needed
 - **Write Custom Articles**: Use the editor to create special content
 - **Edit Existing Articles**: Update content when needed
 - **Add Media**: Upload images, embed videos, create galleries
@@ -107,11 +122,13 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 ### **Editing the Welcome Page**
 1. Log into the admin dashboard
 2. Click **Welcome Page** under Quick Actions
-3. Edit each section (mission, hero text, testimony, etc.)
-4. Click **Save Welcome Page**
-5. Visitors see changes on the welcome page; search engines get an updated page after the automatic rebuild
+3. Edit each section (mission, hero text, links, testimony, etc.)
+4. Click **Save draft**, then **Preview** to check the page
+5. Click **Publish live** when ready — visitors see changes; search engines update after the automatic rebuild
 
-See **[Content Management — Editing the Welcome Page](./content-management.md#editing-the-welcome-page)** for full details.
+If you published something you do not like, open **Previous versions** on the same screen and load or publish an older snapshot.
+
+Full walkthrough: **[Admin Dashboard — Welcome Page](./admin-dashboard.md#welcome-page-editor)**. Field list: **[Content Management](./content-management.md#editing-the-welcome-page)**.
 
 ### **Contact Form Messages**
 - Visitor messages are emailed **directly to Hatun** (ministry contact form inbox)

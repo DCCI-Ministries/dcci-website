@@ -2,15 +2,36 @@
 
 This document explains how admin access and the email allowlist (guard) work together for extra security, and what to do when someone is an admin in Firestore but still cannot access certain admin features.
 
+## No one becomes an admin by signing up alone
+
+The admin login page allows **account creation**, but new accounts are stored as **`Pending`** with **`isAdmin: false`**. They **cannot** open `/admin/dashboard` or any admin screen until a current admin promotes them.
+
+| Action | Result |
+|--------|--------|
+| Sign up | Account created — role **Pending**, **not** a dashboard user |
+| Sign in while Pending or User | **Denied** — admin must assign a role |
+| Super Admin or Admin → **User Management** | Set role to Super Admin, Admin, or Moderator (or User for future comments) |
+| Sign in after promotion | Dashboard access if role is Super Admin, Admin, or Moderator |
+
+**Hatun:** assign **Super Admin** to `hatun@dcciministries.com` in User Management (ministry lead, full access).
+
+**To add a new admin:** have them sign up (if needed), verify email, then a Super Admin or Admin assigns their role in **User Management**.
+
+---
+
 ## Two Layers of Access Control
 
-### 1. Firestore admin status (required for all admin access)
+### 0. Admin assignment (required first)
 
-To use the admin dashboard at all, a user must:
+Before the layers below matter, the user must have been assigned a **dashboard role** (Super Admin, Admin, or Moderator) in **User Management**. Pending, User, and sign-up alone never grant dashboard access.
 
-- Have a document in the **`adminUsers`** collection in Firestore with:
-  - `isAdmin: true`
-  - `userRole`: `'Admin'` or `'Moderator'` (as appropriate)
+### 1. Firestore admin status (required for dashboard access)
+
+To use the admin dashboard, a user must:
+
+- Have a document in **`adminUsers`** with:
+  - `isAdmin: true` (set automatically for Super Admin, Admin, Moderator)
+  - `userRole`: `'SuperAdmin'`, `'Admin'`, or `'Moderator'`
 - Have **verified** their email in Firebase Auth
 - Sign in with that same email
 
@@ -53,7 +74,28 @@ To change the default guarded emails, edit `config/site-contacts.json`, then bui
 
 | Situation | What to check |
 |----------|----------------|
-| Cannot access **dashboard** at all | Ensure they have an `adminUsers` document with `isAdmin: true`, correct `userRole`, and have verified their email. They must sign in with that email. |
+| Cannot access **dashboard** at all | Still **Pending** or **User**, or wrong role. A Super Admin or Admin must set role to Super Admin, Admin, or Moderator in **User Management**. Verify email and sign in with that address. |
 | Can access **dashboard** but not **User Management** | They are an admin in Firestore; their email also needs to be in the guard. Add their email to `ALLOWED_EMAILS` in `src/app/services/user-management.service.ts` and redeploy. |
 
 **In short:** Being an admin in Firestore is required but not always sufficient. For User Management (and any feature that uses the guard), their email must also be in the allowlist for extra security.
+
+---
+
+## Firestore & Storage rules (Super Admin)
+
+**Super Admin** has the same database privileges as **Admin** today:
+
+| Rule helper | Super Admin | Admin | Moderator |
+|-------------|-------------|-------|-----------|
+| `hasDashboardRole()` / `isAdminUser()` | Yes | Yes | Yes |
+| `isFullAdmin()` (user delete, welcome draft, emergency settings) | Yes | Yes | No |
+
+**Sign-up enforcement (server-side):** `adminUsers` **create** requires `isAdmin == false` and `userRole == 'Pending'`. Users cannot self-assign a dashboard role.
+
+**Role assignment:** Only `isFullAdmin()` (Super Admin or Admin) can update another user’s `userRole` / `isAdmin`. Users may update their own doc for email verification and login metadata, but **not** escalate privileges.
+
+**Storage:** uploads require `hasDashboardRole()` (Super Admin, Admin, or Moderator).
+
+Planned **Creator** role and comment moderation are in **[Future Plans](./future-plans.md)** — not in rules yet.
+
+Deploy after rule changes: `firebase deploy --only firestore:rules,storage`

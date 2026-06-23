@@ -27,6 +27,15 @@ Full **Admin** users can edit the public welcome page without changing its look 
 2. Under **Quick Actions**, click **Welcome Page**
 3. Or go directly to `/admin/welcome-settings`
 
+See **[Admin Dashboard — Welcome Page](./admin-dashboard.md#welcome-page-editor)** for the full draft → preview → publish workflow and how to roll back to a previous version.
+
+### **Recommended workflow**
+1. Edit sections in the admin form
+2. **Save draft** — safe to leave; visitors still see the old page
+3. **Preview** — opens `/admin/welcome-preview` (admin-only, yellow banner)
+4. If it looks good, **Publish live** — updates `/welcome` and rebuilds the SEO page for Google
+5. If you dislike the result, use **Previous versions** → **Load into editor** or **Publish** an older snapshot
+
 ### **What you can edit**
 | Section | Editor type |
 |---------|-------------|
@@ -45,16 +54,18 @@ Full **Admin** users can edit the public welcome page without changing its look 
 **Not editable in this screen** (built into the page layout): contact form, newsletter signup, content carousel, footer.
 
 ### **How it works**
-- **Live site:** Changes appear on `/welcome` immediately after save
-- **Search engines:** Astro rebuilds the static SEO page (`/welcome/` for Google) using the same Firestore content
-- **Defaults:** If nothing has been saved yet, the page shows the original hardcoded text
+- **Draft:** Save changes without affecting the live `/welcome` page
+- **Preview:** Opens an admin-only preview of your draft (`/admin/welcome-preview`)
+- **Publish live:** Replaces the public page and triggers an SEO rebuild
+- **Version history:** Each publish archives the previous live page (last 10) — load into the editor or publish again
 
 ### **Storage**
-- Firestore document: `siteSettings/welcome`
-- Saves trigger an Astro redeploy (same pipeline as published articles)
+- **Live:** Firestore `siteSettings/welcome` (public read)
+- **Draft:** `adminSettings/welcomeDraft` (admin only)
+- **Versions:** `adminSettings/welcomeVersions/versions/{id}` (admin only)
 
 ### **Read-only mode**
-If the site is in **read-only mode** (Emergency Controls), the Save button is disabled.
+If the site is in **read-only mode** (Site Management / Emergency Controls), Save draft, Preview, and Publish are disabled.
 
 ---
 

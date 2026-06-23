@@ -5,9 +5,10 @@ import { map, switchMap, filter, take, catchError, combineLatest } from 'rxjs';
 import { Auth as FirebaseAuth } from '@angular/fire/auth';
 import { AuthService, AdminUser } from '../services/auth';
 import { SiteSettingsService } from '../services/site-settings.service';
+import { hasFullDashboardAccess } from '../models/user-roles';
 
 /**
- * Guard for pages that only full Admins can access (not Moderators)
+ * Guard for pages that require full dashboard access (Super Admin or Admin — not Moderator).
  * Used for: User Management, Content Creation, Content Management, Site Settings
  * NOTE: Nuclear lockdown blocks ALL access, including admins
  */
@@ -66,11 +67,11 @@ export const adminOnlyGuard: CanActivateFn = (route, state) => {
             return router.createUrlTree(['/admin/maintenance']);
           }
 
-          // Only allow users with Admin role (not Moderator)
-          if (user && user.isAdmin && user.emailVerified && user.userRole === 'Admin') {
+          // Super Admin or Admin (full access for now; Admin may be narrowed later)
+          if (user && user.isAdmin && user.emailVerified && hasFullDashboardAccess(user.userRole, user.isAdmin)) {
             return true;
           } else {
-            // Redirect to dashboard if not admin or email not verified
+            // Redirect to dashboard if not full admin or email not verified
             return router.createUrlTree(['/admin/dashboard']);
           }
         })

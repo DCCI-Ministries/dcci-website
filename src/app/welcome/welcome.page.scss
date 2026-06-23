@@ -5,6 +5,30 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.welcome-preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: #fff3cd;
+  color: #664d03;
+  border-bottom: 2px solid #ffc107;
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+.welcome-preview-mode .welcome-container {
+  padding-top: 0.5rem;
+}
+
 /* Content container */
 .welcome-container {
   max-width: var(--content-max-width);

@@ -2152,8 +2152,9 @@ export const deleteUser = functions.https.onRequest((req, res) => {
         return;
       }
 
-      // Check if caller is a full admin (not moderator)
-      if (callerData.userRole === 'Moderator') {
+      // Full dashboard access required (Super Admin or Admin — not Moderator/User/Pending)
+      const role = callerData.userRole;
+      if (role === 'Moderator' || role === 'User' || role === 'Pending') {
         res.status(403).json({ error: 'Forbidden: Full admin privileges required' });
         return;
       }

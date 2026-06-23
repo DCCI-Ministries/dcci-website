@@ -1,4 +1,14 @@
-<ion-content [fullscreen]="true" class="welcome-page">
+<ion-content [fullscreen]="true" class="welcome-page" [class.welcome-preview-mode]="isPreviewMode">
+  @if (isPreviewMode) {
+  <div class="welcome-preview-banner">
+    @if (previewVersionId) {
+    <p><strong>Previewing saved version:</strong> {{ previewVersionTitle }} — the live site is unchanged.</p>
+    } @else {
+    <p><strong>Preview</strong> — visitors still see the live welcome page until you publish.</p>
+    }
+    <ion-button size="small" fill="solid" (click)="backToEditor()">Back to editor</ion-button>
+  </div>
+  }
   <div class="welcome-container">
     <main id="main-content" role="main">
       <!-- Header Section -->

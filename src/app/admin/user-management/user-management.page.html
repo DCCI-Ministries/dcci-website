@@ -11,7 +11,10 @@
   <div class="user-management-container">
     <div class="header-section">
       <h2>User Management</h2>
-      <p class="subtitle">Manage user roles and permissions</p>
+      <p class="subtitle">
+        Assign roles here. New sign-ups stay <strong>Pending</strong> until you approve them — they cannot access the dashboard on their own.
+        <strong>Hatun</strong> should be <strong>Super Admin</strong> (full access).
+      </p>
     </div>
 
     <div class="users-content" *ngIf="!isLoading">
@@ -27,9 +30,6 @@
             <div class="user-meta">
               <ion-chip [color]="getRoleColor(user.userRole)" size="small">
                 <ion-label>{{ getRoleDisplayName(user.userRole) }}</ion-label>
-              </ion-chip>
-              <ion-chip *ngIf="user.isAdmin" color="success" size="small">
-                <ion-label>Admin</ion-label>
               </ion-chip>
               <ion-chip *ngIf="user.emailVerified" color="primary" size="small">
                 <ion-label>Verified</ion-label>
@@ -54,8 +54,10 @@
               placeholder="Select role"
             >
               <ion-select-option value="Pending">Pending</ion-select-option>
+              <ion-select-option value="User">User</ion-select-option>
               <ion-select-option value="Moderator">Moderator</ion-select-option>
               <ion-select-option value="Admin">Admin</ion-select-option>
+              <ion-select-option value="SuperAdmin">Super Admin</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>

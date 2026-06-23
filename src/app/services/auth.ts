@@ -6,12 +6,17 @@ import { Auth as FirebaseAuth, createUserWithEmailAndPassword, signInWithEmailAn
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { SanitizationService } from './sanitization';
 import { environment } from '../../environments/environment';
+import {
+  UserRole,
+  hasDashboardAccess,
+  hasFullDashboardAccess
+} from '../models/user-roles';
 
 export interface AdminUser {
   uid: string;
   email: string;
   isAdmin: boolean;
-  userRole?: 'Pending' | 'Admin' | 'Moderator' | null;
+  userRole?: UserRole;
   emailVerified: boolean;
   createdAt: Date;
   lastLoginAt?: Date;
@@ -227,13 +232,13 @@ export class AuthService {
           // Load user data from Firestore
           const userData = await this.loadUserData(user.uid);
 
-          if (userData && userData.isAdmin) {
+          if (userData && userData.isAdmin && hasDashboardAccess(userData.userRole, userData.isAdmin)) {
 
             return { success: true, message: 'Login successful!' };
           } else {
-            // User exists but is not an admin - sign them out and redirect
+            // User exists but has no dashboard role — sign them out
             await this.signOut();
-            return { success: false, message: 'Access denied. Admin privileges required.' };
+            return { success: false, message: 'Access denied. An admin must assign your role before you can use the dashboard.' };
           }
         } catch (error: any) {
           console.error('Sign in error (inner catch):', error);
@@ -472,19 +477,29 @@ export class AuthService {
   }
 
   /**
-   * Check if current user is admin
+   * Check if current user can use the admin dashboard (any dashboard role).
    */
   isAdmin(): boolean {
     const currentUser = this.currentUserSubject.value;
-    return currentUser ? currentUser.isAdmin : false;
+    return currentUser
+      ? currentUser.isAdmin && hasDashboardAccess(currentUser.userRole, currentUser.isAdmin)
+      : false;
   }
 
   /**
-   * Check if current user is a full Admin (not Moderator)
+   * Full dashboard access (Admin or Super Admin — not Moderator).
+   * Admin currently matches Super Admin; may be narrowed later.
    */
   isFullAdmin(): boolean {
     const currentUser = this.currentUserSubject.value;
-    return currentUser ? (currentUser.isAdmin && currentUser.userRole === 'Admin') : false;
+    return currentUser
+      ? currentUser.isAdmin && hasFullDashboardAccess(currentUser.userRole, currentUser.isAdmin)
+      : false;
+  }
+
+  isSuperAdmin(): boolean {
+    const currentUser = this.currentUserSubject.value;
+    return currentUser?.userRole === 'SuperAdmin' && currentUser.isAdmin === true;
   }
 
   /**
@@ -492,7 +507,7 @@ export class AuthService {
    */
   isModerator(): boolean {
     const currentUser = this.currentUserSubject.value;
-    return currentUser ? (currentUser.isAdmin && currentUser.userRole === 'Moderator') : false;
+    return currentUser?.userRole === 'Moderator' && currentUser.isAdmin === true;
   }
 
   /**

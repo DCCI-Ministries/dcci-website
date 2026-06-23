@@ -1,7 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
+  AlertController,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -33,11 +34,15 @@ import { AuthService } from '../../services/auth';
 import {
   DEFAULT_HERO_IMAGE_URL,
   DEFAULT_LOGO_IMAGE_URL,
+  MAX_WELCOME_VERSIONS,
   mergeWelcomeContent,
   normalizeWelcomeLinks,
   WELCOME_LINK_ICON_OPTIONS,
   WelcomePageContent,
-  WelcomePageLink
+  WelcomePageLink,
+  WelcomePageVersionSummary,
+  versionDisplaySubtitle,
+  versionDisplayTitle
 } from '../../models/welcome-content.model';
 
 interface AdminUser {
@@ -78,8 +83,15 @@ interface AdminUser {
 export class WelcomeSettingsPage implements OnInit, OnDestroy {
   content: WelcomePageContent = mergeWelcomeContent(null);
   linkIconOptions = WELCOME_LINK_ICON_OPTIONS;
+  versions: WelcomePageVersionSummary[] = [];
+  maxWelcomeVersions = MAX_WELCOME_VERSIONS;
+  versionsLoadFailed = false;
   isLoading = true;
   isSaving = false;
+  savingAction: 'draft' | 'publish' | 'preview' | 'discard' | 'restore' | 'delete' | 'metadata' | null = null;
+  versionDisplayTitle = versionDisplayTitle;
+  versionDisplaySubtitle = versionDisplaySubtitle;
+  hasDraft = false;
   readOnlyMode = false;
   currentUser: AdminUser | null = null;
 
@@ -108,7 +120,10 @@ export class WelcomeSettingsPage implements OnInit, OnDestroy {
     private storage: Storage,
     private router: Router,
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private alertController: AlertController,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
@@ -119,19 +134,21 @@ export class WelcomeSettingsPage implements OnInit, OnDestroy {
     const user = await firstValueFrom(
       this.authService.currentUser$.pipe(filter((u) => u !== null), take(1))
     );
-    if (!user?.isAdmin || !user.emailVerified) {
+    if (!this.authService.isFullAdmin() || !user.emailVerified) {
       this.router.navigate(['/admin/dashboard']);
       return;
     }
     this.currentUser = { uid: user.uid, isAdmin: user.isAdmin, emailVerified: user.emailVerified };
 
     try {
-      this.content = await this.welcomeContentService.loadWelcomeContent();
-      this.logoPreviewUrl = this.content.logoImageUrl || DEFAULT_LOGO_IMAGE_URL;
-      this.heroPreviewUrl = this.content.heroImageUrl || DEFAULT_HERO_IMAGE_URL;
+      await this.reloadEditorState();
     } catch (error) {
       console.error('Failed to load welcome page content:', error);
-      await this.showToast('Failed to load welcome page content', 'danger');
+      const message =
+        error instanceof Error && error.message.includes('permission')
+          ? 'Could not load welcome page — deploy Firestore rules (firebase deploy --only firestore:rules)'
+          : 'Failed to load welcome page content';
+      await this.showToast(message, 'danger');
     } finally {
       this.isLoading = false;
     }
@@ -234,54 +251,213 @@ export class WelcomeSettingsPage implements OnInit, OnDestroy {
     });
   }
 
-  async save() {
-    if (this.readOnlyMode) {
-      await this.showToast('Site is in read-only mode. Changes cannot be saved.', 'warning');
+  async saveDraft() {
+    if (!(await this.prepareAndValidate())) {
       return;
     }
 
-    const socialError = this.validateLinks(this.content.socialLinks, 'social');
-    if (socialError) {
-      await this.showToast(socialError, 'danger');
-      return;
-    }
-    const supportError = this.validateLinks(this.content.supportLinks, 'support');
-    if (supportError) {
-      await this.showToast(supportError, 'danger');
-      return;
-    }
-
-    const loading = await this.loadingController.create({
-      message: 'Saving welcome page...'
-    });
-    await loading.present();
-    this.isSaving = true;
+    const loading = await this.presentLoading('Saving draft...');
+    this.beginSaving('draft');
 
     try {
-      if (this.logoFile) {
-        this.isUploadingLogo = true;
-        this.content.logoImageUrl = await this.uploadImageFile(this.logoFile, 'logo');
-        this.logoFile = null;
-        this.logoPreviewUrl = this.content.logoImageUrl;
-      }
-
-      if (this.heroFile) {
-        this.isUploadingHero = true;
-        this.content.heroImageUrl = await this.uploadImageFile(this.heroFile, 'hero');
-        this.heroFile = null;
-        this.heroPreviewUrl = this.content.heroImageUrl;
-      }
-
-      await this.welcomeContentService.saveWelcomeContent(this.prepareContentForSave());
-      await this.showToast('Welcome page saved. SEO pages will rebuild shortly.', 'success');
+      await this.uploadPendingImages();
+      await this.welcomeContentService.saveDraft(this.prepareContentForSave());
+      this.hasDraft = true;
+      await this.showToast('Draft saved. Preview before publishing.', 'success');
     } catch (error) {
-      console.error('Failed to save welcome page content:', error);
-      await this.showToast('Failed to save welcome page content', 'danger');
+      console.error('Failed to save welcome page draft:', error);
+      await this.showToast('Failed to save draft', 'danger');
     } finally {
-      this.isSaving = false;
-      this.isUploadingLogo = false;
-      this.isUploadingHero = false;
-      await loading.dismiss();
+      await this.endSaving(loading);
+    }
+  }
+
+  async preview() {
+    if (!(await this.prepareAndValidate())) {
+      return;
+    }
+
+    const loading = await this.presentLoading('Preparing preview...');
+    this.beginSaving('preview');
+
+    try {
+      await this.uploadPendingImages();
+      await this.welcomeContentService.saveDraft(this.prepareContentForSave());
+      this.hasDraft = true;
+      await this.router.navigate(['/admin/welcome-preview']);
+    } catch (error) {
+      console.error('Failed to open preview:', error);
+      await this.showToast('Failed to open preview', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  async publish() {
+    if (this.readOnlyMode) {
+      await this.showToast('Site is in read-only mode. Publishing is disabled.', 'warning');
+      return;
+    }
+
+    if (!(await this.prepareAndValidate())) {
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Publish welcome page?',
+      message: 'Visitors will see these changes immediately. The current live page will be saved in version history.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Publish', role: 'confirm' }
+      ]
+    });
+    this.blurActiveElement();
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'confirm') {
+      await this.confirmPublish();
+    }
+  }
+
+  async discardDraft() {
+    const alert = await this.alertController.create({
+      header: 'Discard draft?',
+      message: 'Your saved draft will be deleted and the editor will reload the live published page.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Discard draft', role: 'destructive' }
+      ]
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'destructive') {
+      await this.confirmDiscardDraft();
+    }
+  }
+
+  async restoreVersionToEditor(version: WelcomePageVersionSummary) {
+    const alert = await this.alertController.create({
+      header: 'Load previous version?',
+      message: `Load the version "${versionDisplayTitle(version)}" into the editor as a draft? Nothing goes live until you publish.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Load into editor', role: 'confirm' }
+      ]
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'confirm') {
+      await this.confirmRestoreToDraft(version.versionId);
+    }
+  }
+
+  async publishVersion(version: WelcomePageVersionSummary) {
+    if (this.readOnlyMode) {
+      await this.showToast('Site is in read-only mode. Publishing is disabled.', 'warning');
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Publish this version?',
+      message: `Replace the live welcome page with "${versionDisplayTitle(version)}"? The current live page will be archived first.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Publish version', role: 'confirm' }
+      ]
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'confirm') {
+      await this.confirmPublishVersion(version.versionId);
+    }
+  }
+
+  async deleteVersion(version: WelcomePageVersionSummary) {
+    if (this.readOnlyMode) {
+      await this.showToast('Site is in read-only mode. Deleting versions is disabled.', 'warning');
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Delete saved version?',
+      message: `Remove the backup "${versionDisplayTitle(version)}"? This cannot be undone. The live welcome page is not affected.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Delete', role: 'destructive' }
+      ]
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'destructive') {
+      await this.confirmDeleteVersion(version.versionId);
+    }
+  }
+
+  formatArchivedDate(version: WelcomePageVersionSummary): string {
+    const ts = version.archivedAt as { toDate?: () => Date } | undefined;
+    if (ts && typeof ts.toDate === 'function') {
+      return ts.toDate().toLocaleString();
+    }
+    return version.label || version.versionId;
+  }
+
+  previewSavedVersion(version: WelcomePageVersionSummary) {
+    void this.router.navigate(['/admin/welcome-preview'], {
+      queryParams: {
+        versionId: version.versionId,
+        versionTitle: versionDisplayTitle(version)
+      }
+    });
+  }
+
+  async editVersionDetails(version: WelcomePageVersionSummary) {
+    if (this.readOnlyMode) {
+      await this.showToast('Site is in read-only mode. Editing version labels is disabled.', 'warning');
+      return;
+    }
+
+    let saved: { displayTitle: string; displayDescription: string } | undefined;
+
+    const alert = await this.alertController.create({
+      header: 'Name this version',
+      message: 'Add a title and optional note so you can find this backup later. These are only visible to admins.',
+      inputs: [
+        {
+          name: 'displayTitle',
+          type: 'text',
+          placeholder: 'e.g. Easter 2026 welcome page',
+          value: version.displayTitle || ''
+        },
+        {
+          name: 'displayDescription',
+          type: 'textarea',
+          placeholder: 'Optional note (not shown on the public site)',
+          value: version.displayDescription || ''
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Save',
+          role: 'confirm',
+          handler: (data) => {
+            saved = {
+              displayTitle: String(data?.displayTitle ?? '').trim(),
+              displayDescription: String(data?.displayDescription ?? '').trim()
+            };
+          }
+        }
+      ]
+    });
+    this.blurActiveElement();
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'confirm' && saved) {
+      await this.confirmUpdateVersionMetadata(
+        version.versionId,
+        saved.displayTitle,
+        saved.displayDescription
+      );
     }
   }
 
@@ -309,6 +485,204 @@ export class WelcomeSettingsPage implements OnInit, OnDestroy {
 
   removeSupportLink(index: number) {
     this.content.supportLinks = this.content.supportLinks.filter((_, i) => i !== index);
+  }
+
+  private async confirmPublish() {
+    const loading = await this.presentLoading('Publishing welcome page...');
+    this.beginSaving('publish');
+
+    try {
+      await this.uploadPendingImages();
+      await this.welcomeContentService.publishContent(this.prepareContentForSave());
+      this.hasDraft = true;
+      await this.reloadEditorState();
+      await this.showToast('Welcome page published. SEO pages will rebuild shortly.', 'success');
+    } catch (error) {
+      console.error('Failed to publish welcome page:', error);
+      await this.showToast('Failed to publish welcome page', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private async confirmDiscardDraft() {
+    const loading = await this.presentLoading('Discarding draft...');
+
+    try {
+      await this.welcomeContentService.discardDraft();
+      await this.reloadEditorState();
+      await this.showToast('Draft discarded. Editor shows the live page.', 'success');
+    } catch (error) {
+      console.error('Failed to discard draft:', error);
+      await this.showToast('Failed to discard draft', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private async confirmRestoreToDraft(versionId: string) {
+    const loading = await this.presentLoading('Loading version...');
+    this.beginSaving('restore');
+
+    try {
+      this.content = await this.welcomeContentService.restoreVersionToDraft(versionId);
+      this.syncImagePreviews();
+      this.hasDraft = true;
+      await this.showToast('Version loaded into editor. Publish when ready.', 'success');
+    } catch (error) {
+      console.error('Failed to restore version:', error);
+      await this.showToast('Failed to load version', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private async confirmPublishVersion(versionId: string) {
+    const loading = await this.presentLoading('Publishing version...');
+    this.beginSaving('publish');
+
+    try {
+      await this.welcomeContentService.publishVersion(versionId);
+      await this.reloadEditorState();
+      await this.showToast('Previous version published live.', 'success');
+    } catch (error) {
+      console.error('Failed to publish version:', error);
+      await this.showToast('Failed to publish version', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private async confirmUpdateVersionMetadata(
+    versionId: string,
+    displayTitle: string,
+    displayDescription: string
+  ) {
+    const loading = await this.presentLoading('Saving version label...');
+    this.beginSaving('metadata');
+
+    try {
+      await this.welcomeContentService.updateVersionMetadata(versionId, displayTitle, displayDescription);
+      await this.reloadEditorState();
+      await this.showToast('Version label saved.', 'success');
+    } catch (error) {
+      console.error('Failed to update version metadata:', error);
+      await this.showToast('Failed to save version label', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private async confirmDeleteVersion(versionId: string) {
+    const loading = await this.presentLoading('Deleting version...');
+    this.beginSaving('delete');
+
+    try {
+      await this.welcomeContentService.deleteVersion(versionId);
+      await this.reloadEditorState();
+      await this.showToast('Saved version deleted.', 'success');
+    } catch (error) {
+      console.error('Failed to delete version:', error);
+      await this.showToast('Failed to delete version', 'danger');
+    } finally {
+      await this.endSaving(loading);
+    }
+  }
+
+  private blurActiveElement() {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      active.blur();
+    }
+  }
+
+  private async presentLoading(message: string) {
+    this.blurActiveElement();
+    const loading = await this.loadingController.create({ message });
+    await loading.present();
+    return loading;
+  }
+
+  private beginSaving(action: 'draft' | 'publish' | 'preview' | 'discard' | 'restore' | 'delete' | 'metadata') {
+    this.ngZone.run(() => {
+      this.isSaving = true;
+      this.savingAction = action;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private async endSaving(loading: HTMLIonLoadingElement) {
+    this.ngZone.run(() => {
+      this.isSaving = false;
+      this.savingAction = null;
+      this.cdr.markForCheck();
+    });
+    try {
+      await loading.dismiss();
+    } catch {
+      // Overlay may already be dismissed
+    }
+  }
+
+  private async reloadEditorState() {
+    const { content, hasDraft } = await this.welcomeContentService.loadEditorContent();
+    this.content = content;
+    this.hasDraft = hasDraft;
+    this.syncImagePreviews();
+    try {
+      this.versions = await this.welcomeContentService.listVersions();
+      this.versionsLoadFailed = false;
+    } catch (error) {
+      console.warn('Could not list welcome versions:', error);
+      this.versions = [];
+      this.versionsLoadFailed = true;
+    }
+    this.ngZone.run(() => this.cdr.markForCheck());
+  }
+
+  private syncImagePreviews() {
+    this.logoPreviewUrl = this.content.logoImageUrl || DEFAULT_LOGO_IMAGE_URL;
+    this.heroPreviewUrl = this.content.heroImageUrl || DEFAULT_HERO_IMAGE_URL;
+    this.logoFile = null;
+    this.heroFile = null;
+  }
+
+  private async prepareAndValidate(): Promise<boolean> {
+    if (this.readOnlyMode) {
+      await this.showToast('Site is in read-only mode. Changes cannot be saved.', 'warning');
+      return false;
+    }
+
+    const socialError = this.validateLinks(this.content.socialLinks, 'social');
+    if (socialError) {
+      await this.showToast(socialError, 'danger');
+      return false;
+    }
+    const supportError = this.validateLinks(this.content.supportLinks, 'support');
+    if (supportError) {
+      await this.showToast(supportError, 'danger');
+      return false;
+    }
+    return true;
+  }
+
+  private async uploadPendingImages() {
+    if (this.logoFile) {
+      this.isUploadingLogo = true;
+      this.content.logoImageUrl = await this.uploadImageFile(this.logoFile, 'logo');
+      this.logoFile = null;
+      this.logoPreviewUrl = this.content.logoImageUrl;
+    }
+
+    if (this.heroFile) {
+      this.isUploadingHero = true;
+      this.content.heroImageUrl = await this.uploadImageFile(this.heroFile, 'hero');
+      this.heroFile = null;
+      this.heroPreviewUrl = this.content.heroImageUrl;
+    }
+
+    this.isUploadingLogo = false;
+    this.isUploadingHero = false;
   }
 
   private prepareContentForSave(): WelcomePageContent {
