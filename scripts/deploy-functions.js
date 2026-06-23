@@ -23,9 +23,11 @@ try {
   execSync('firebase deploy --only functions', { stdio: 'inherit' });
 
   console.log('\n✅ Firebase Functions deployed successfully!');
-  console.log('\n📧 Remember to configure email credentials:');
-  console.log('   firebase functions:config:set email.user="your-email@gmail.com"');
-  console.log('   firebase functions:config:set email.pass="your-app-password"');
+  console.log('\n📧 Email credentials use functions config keys mail.user and mail.pass');
+  console.log('   Check: npx firebase-tools functions:config:get');
+  console.log('   Set if missing:');
+  console.log('   firebase functions:config:set mail.user="your-sender@gmail.com"');
+  console.log('   firebase functions:config:set mail.pass="your-google-app-password"');
 
 } catch (error) {
   console.error('\n❌ Deployment failed:', error.message);

@@ -1,18 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Contacts collection - contact form submissions
+    // Contacts collection - metadata only (timestamp + newsletter opt-in flag; no message content)
     match /contacts/{document} {
-      // Allow anyone to create (for public contact form submissions)
-      // Block writes if site is in read-only mode
-      allow create: if !siteIsReadOnly();
+      allow create: if false;
 
-      // Only admins can read contact submissions (for dashboard activity)
-      // No public reads - this data is private
       allow read: if isAdminUser();
 
-      // Deny update and delete (immutable once created)
       allow update, delete: if false;
+    }
+
+    // IP-only rate limits for contact form cooldown (written by Cloud Functions only)
+    match /contactRateLimits/{document} {
+      allow read, write: if false;
+    }
+
+    // Per-email daily rate limits for contact form (metadata only, Cloud Functions only)
+    match /contactEmailRateLimits/{document} {
+      allow read, write: if false;
+    }
+
+    // Contact form email delivery failures (metadata only — Cloud Functions only)
+    match /contactDeliveryFailures/{document} {
+      allow read: if isAdminUser();
+      allow create, update, delete: if false;
     }
 
     // Subscribers collection - newsletter subscriptions

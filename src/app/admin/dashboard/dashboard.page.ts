@@ -30,6 +30,8 @@ interface DashboardStats {
   combinedPercentUsed: number | null;
   databaseConnection: 'online' | 'offline' | 'checking';
   emailService: 'active' | 'inactive' | 'checking';
+  undeliveredEmailCount: number;
+  latestDeliveryFailureAt: string | null;
   sslCertificate: 'valid' | 'invalid' | 'expiring' | 'checking';
 }
 
@@ -73,6 +75,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     combinedPercentUsed: null,
     databaseConnection: 'checking',
     emailService: 'checking',
+    undeliveredEmailCount: 0,
+    latestDeliveryFailureAt: null,
     sslCertificate: 'checking'
   };
   recentActivity: ActivityItem[] = [];
@@ -99,10 +103,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
     });
 
-    // Load dashboard data
-    this.loadDashboardData();
+    // Load dashboard data, then system status (needs contact delivery stats)
+    void this.loadDashboardData().then(() => this.loadSystemStatus());
     this.loadRecentActivity();
-    this.loadSystemStatus();
   }
 
   ngOnDestroy() {
@@ -158,6 +161,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         totalUsers: adminSnapshot.size,
         totalMessages: (contactStats as any)?.totalContacts ?? 0,
         newsletterSubscribers: (contactStats as any)?.totalSubscribers ?? 0,
+        undeliveredEmailCount: (contactStats as any)?.undeliveredEmailCount ?? 0,
+        latestDeliveryFailureAt: (contactStats as any)?.latestDeliveryFailureAt ?? null,
         totalViews: siteStatsData?.totalUniqueVisitors ?? 0,
         storageUsedBytes,
         storageLimitBytes,
@@ -250,7 +255,7 @@ export class DashboardPage implements OnInit, OnDestroy {
           }
         }
 
-      // 2. Get recent contact form submissions (last 5)
+      // 2. Get recent contact form submissions (metadata only — no names or message content)
       try {
         const contactsSnapshot = await runInInjectionContext(this.injector, async () => {
           const contactsRef = collection(this.firestore, 'contacts');
@@ -262,56 +267,47 @@ export class DashboardPage implements OnInit, OnDestroy {
           return await getDocs(contactsQuery);
         });
 
-          contactsSnapshot.forEach((doc) => {
-            const data = doc.data() as any;
-            const timestamp = data.submittedAt;
-            if (timestamp) {
-              activities.push({
-                icon: 'mail-outline',
-                text: `Contact form submission from ${data.name || 'Anonymous'}`,
-                time: this.formatTimeAgo(timestamp),
-                timestamp: timestamp
-              });
-            }
-          });
-        } catch (error) {
-          console.error('Error loading contact form activities:', error);
-          // If submittedAt field doesn't exist or isn't indexed, try without orderBy
-          try {
-            const contactsSnapshot = await runInInjectionContext(this.injector, async () => {
-              const contactsRef = collection(this.firestore, 'contacts');
-              return await getDocs(contactsRef);
+        contactsSnapshot.forEach((doc) => {
+          const data = doc.data() as any;
+          const timestamp = data.submittedAt;
+          if (timestamp) {
+            activities.push({
+              icon: 'mail-outline',
+              text: 'Contact form submission received',
+              time: this.formatTimeAgo(timestamp),
+              timestamp: timestamp
             });
-            const contactsArray = contactsSnapshot.docs
-              .map(doc => {
-                const docData = doc.data() as any;
-                return { id: doc.id, ...docData };
-              })
-              .filter((item: any) => item.submittedAt)
-              .sort((a: any, b: any) => {
-                const aTimestamp = a.submittedAt;
-                const bTimestamp = b.submittedAt;
-                const aTime = aTimestamp?.toDate ? aTimestamp.toDate().getTime() : new Date(aTimestamp).getTime();
-                const bTime = bTimestamp?.toDate ? bTimestamp.toDate().getTime() : new Date(bTimestamp).getTime();
-                return bTime - aTime;
-              })
-              .slice(0, 5);
-
-            contactsArray.forEach((item: any) => {
-              const timestamp = item.submittedAt;
-              if (timestamp) {
-                activities.push({
-                  icon: 'mail-outline',
-                  text: `Contact form submission from ${item.name || 'Anonymous'}`,
-                  time: this.formatTimeAgo(timestamp),
-                  timestamp: timestamp
-                });
-              }
-            });
-          } catch (fallbackError) {
-            console.error('Error loading contact form activities (fallback):', fallbackError);
           }
+        });
+      } catch (error) {
+        console.error('Error loading contact form activities:', error);
+        try {
+          const contactsSnapshot = await runInInjectionContext(this.injector, async () => {
+            const contactsRef = collection(this.firestore, 'contacts');
+            return await getDocs(contactsRef);
+          });
+          const contactsArray = contactsSnapshot.docs
+            .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
+            .filter((item: any) => item.submittedAt)
+            .sort((a: any, b: any) => {
+              const aTime = a.submittedAt?.toDate ? a.submittedAt.toDate().getTime() : new Date(a.submittedAt).getTime();
+              const bTime = b.submittedAt?.toDate ? b.submittedAt.toDate().getTime() : new Date(b.submittedAt).getTime();
+              return bTime - aTime;
+            })
+            .slice(0, 5);
+
+          contactsArray.forEach((item: any) => {
+            activities.push({
+              icon: 'mail-outline',
+              text: 'Contact form submission received',
+              time: this.formatTimeAgo(item.submittedAt),
+              timestamp: item.submittedAt
+            });
+          });
+        } catch (fallbackError) {
+          console.error('Error loading contact form activities (fallback):', fallbackError);
         }
+      }
 
       // 3. Get recent newsletter subscriptions (last 5)
       try {
@@ -540,6 +536,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/admin/user-management']);
   }
 
+  navigateToWelcomeSettings() {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    this.router.navigate(['/admin/welcome-settings']);
+  }
+
   navigateToEmergencyControls() {
     // Blur any active element to prevent aria-hidden warnings during navigation
     if (document.activeElement instanceof HTMLElement) {
@@ -590,8 +593,9 @@ export class DashboardPage implements OnInit, OnDestroy {
         const emailTest = await Promise.race([emailCheck, timeoutPromise]) as any;
         if (emailTest && emailTest.status === 200) {
           const data = emailTest.body as any;
-          // Check if email config is set
-          if (data?.config?.user === 'Configured' && data?.config?.pass === 'Configured') {
+          const configOk = data?.config?.user === 'Configured' && data?.config?.pass === 'Configured';
+          const hasDeliveryFailures = (this.stats.undeliveredEmailCount ?? 0) > 0;
+          if (configOk && !hasDeliveryFailures) {
             this.stats.emailService = 'active';
           } else {
             this.stats.emailService = 'inactive';

@@ -1,7 +1,9 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { generateMetaTags, generateJSONLD, absoluteUrl } from '../lib/seo';
+import { SITE_CONTACTS } from '../lib/siteContacts';
 
+const contacts = SITE_CONTACTS;
 const canonicalUrl = absoluteUrl('/contact/');
 
 const seoData = {
@@ -39,7 +41,7 @@ const jsonLd = generateJSONLD(seoData);
       <h2>Content, Theological, or Ministry Inquiries</h2>
       <p>For questions about teachings, articles, videos, theology, or the mission of DCCI Ministries:</p>
       <div class="contact-info-box">
-        <p><strong>Email:</strong> <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+        <p><strong>Email:</strong> <a href={`mailto:${contacts.ministryInfoEmail}`}>{contacts.ministryInfoEmail}</a></p>
       </div>
     </section>
 
@@ -47,7 +49,7 @@ const jsonLd = generateJSONLD(seoData);
       <h2>Website, Technical, or Bug Reports</h2>
       <p>For issues related to the website, accessibility, errors, or technical concerns:</p>
       <div class="contact-info-box">
-        <p><strong>Email:</strong> <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
+        <p><strong>Email:</strong> <a href={`mailto:${contacts.technicalAdminEmail}`}>{contacts.technicalAdminEmail}</a></p>
       </div>
     </section>
 

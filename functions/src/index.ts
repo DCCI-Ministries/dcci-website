@@ -2,9 +2,21 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as corsLib from "cors";
-import * as nodemailer from "nodemailer";
 import * as https from "https";
+import { createMailTransport, getSmtpSettings } from "./mail-transport";
 import { sanitizeContactForm, escapeHtmlForEmail, sanitizeNewsletterForm } from "./sanitization";
+import { logContactDeliveryFailure } from "./contact-delivery-log";
+import { buildHatunDeveloperReportLinks } from "./contact-dev-report";
+import { recoverContacts, parseRecoveryDate } from "./contact-recovery";
+import {
+  isBlockedSender,
+  isRepeatMessage,
+  buildCooldownRejection,
+  buildRepeatMessageRejection,
+  getLatestSubmissionMs,
+  CONTACT_COOLDOWN_MS,
+} from "./contact-security";
+import { SITE_CONTACTS } from "./site-contacts";
 
 // Load environment variables from .env file for local development
 // This only runs in local/emulator environment, not in production
@@ -72,10 +84,14 @@ const db = admin.firestore();
 
 const user = functions.config().mail.user as string;
 const pass = functions.config().mail.pass as string;
-const to = functions.config().mail.to as string;
+const smtpSettings = getSmtpSettings();
+/** Contact form recipient — from config/site-contacts.json (not Firebase mail.to). */
+const contactFormRecipientEmail = SITE_CONTACTS.contactFormRecipientEmail;
+/** Website problem reports — technical maintainer inbox. */
+const technicalAdminEmail = SITE_CONTACTS.technicalAdminEmail;
 
-// Cooldown period in milliseconds (5 minutes)
-const COOLDOWN_PERIOD = 5 * 60 * 1000;
+// Cooldown between contact form submissions (same email or IP)
+const COOLDOWN_PERIOD = CONTACT_COOLDOWN_MS;
 
 const FREE_TIER_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB free tier for Firebase Storage
 const FREE_TIER_FIRESTORE_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB free tier for Firestore database
@@ -118,12 +134,7 @@ async function tryGetBucketFiles(bucketName: string): Promise<{ files: any[]; to
   return { files, totalBytes };
 }
 
-const tx = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: { user, pass },
-});
+const tx = createMailTransport({ user, pass }, smtpSettings);
 
 export const submitContactForm = functions.https.onRequest((req, res) => {
   return cors(req, res, async () => {
@@ -151,19 +162,6 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
       'remoteAddress': req.connection?.remoteAddress
     });
 
-    // IP blocking check - block common VPN/spam IP ranges
-    const blockedRanges = ['111.', '185.', '45.', '91.', '104.']; // Common VPN/spam ranges
-    const isBlockedIP = blockedRanges.some(range => clientIP.startsWith(range));
-
-    if (isBlockedIP) {
-      console.log('Blocked IP detected:', clientIP);
-      res.status(403).json({
-        error: "VPN detected",
-        message: "We've detected that you're using a VPN. To help prevent spam, please turn off your VPN and try again. If you're not using a VPN, please contact us directly."
-      });
-      return;
-    }
-
     // Honeypot check - if website field is filled, it's likely a bot
     if (website) {
       console.log('Bot detected via honeypot');
@@ -175,9 +173,10 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
 
     if (!validation.isValid) {
       console.log('Input validation failed:', validation.errors);
+      const primaryMessage = validation.errors[0] || 'Please check your input and try again.';
       res.status(400).json({
-        error: "Invalid input",
-        message: "Please check your input and try again.",
+        error: "invalid_input",
+        message: primaryMessage,
         details: validation.errors
       });
       return;
@@ -185,26 +184,52 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
 
     const { name: sanitizedName, email: sanitizedEmail, subject: sanitizedSubject, message: sanitizedMessage, newsletter: sanitizedNewsletter, formLoadTime: sanitizedFormLoadTime, submissionTime: sanitizedSubmissionTime } = validation.sanitizedData!;
 
+    const blocked = isBlockedSender(sanitizedEmail, clientIP);
+    if (blocked) {
+      console.log('Blocked contact form sender:', { email: sanitizedEmail, clientIP, code: blocked.code });
+      res.status(403).json({
+        error: blocked.code,
+        message: blocked.message,
+      });
+      return;
+    }
+
     try {
-      // Simple cooldown check - get all contacts from this IP and check timestamps
-      const allContacts = await db.collection('contacts').get();
-      const recentSubmissions = allContacts.docs
-        .filter(doc => doc.data().ipAddress === clientIP)
-        .sort((a, b) => b.data().submittedAt?.toMillis() - a.data().submittedAt?.toMillis());
+      const [emailMatches, ipMatches] = await Promise.all([
+        db.collection('contacts').where('email', '==', sanitizedEmail).limit(25).get(),
+        clientIP !== 'unknown'
+          ? db.collection('contacts').where('ipAddress', '==', clientIP).limit(25).get()
+          : Promise.resolve(null),
+      ]);
 
-      if (recentSubmissions.length > 0) {
-        const lastSubmission = recentSubmissions[0].data();
-        const lastSubmissionTime = lastSubmission.submittedAt?.toMillis() || 0;
-        const currentTime = Date.now();
+      const cooldownDocs = [
+        ...emailMatches.docs,
+        ...(ipMatches?.docs || []),
+      ];
 
-        if (currentTime - lastSubmissionTime < COOLDOWN_PERIOD) {
-          console.log('Cooldown period active for IP:', clientIP);
-          res.status(429).json({
-            error: "Please wait before submitting another message",
-            retryAfter: Math.ceil((COOLDOWN_PERIOD - (currentTime - lastSubmissionTime)) / 1000)
-          });
-          return;
-        }
+      const lastSubmissionTime = getLatestSubmissionMs(cooldownDocs);
+      const currentTime = Date.now();
+
+      if (lastSubmissionTime && currentTime - lastSubmissionTime < COOLDOWN_PERIOD) {
+        const retryAfter = Math.ceil((COOLDOWN_PERIOD - (currentTime - lastSubmissionTime)) / 1000);
+        const rejection = buildCooldownRejection(retryAfter);
+        console.log('Cooldown period active:', { email: sanitizedEmail, clientIP, retryAfter });
+        res.status(429).json({
+          error: rejection.code,
+          message: rejection.message,
+          retryAfter: rejection.retryAfter,
+        });
+        return;
+      }
+
+      if (isRepeatMessage(sanitizedSubject, sanitizedMessage, emailMatches.docs)) {
+        const rejection = buildRepeatMessageRejection();
+        console.log('Repeat message blocked:', { email: sanitizedEmail, subject: sanitizedSubject });
+        res.status(409).json({
+          error: rejection.code,
+          message: rejection.message,
+        });
+        return;
       }
 
       // Store contact form data in Firestore (using sanitized data)
@@ -255,8 +280,8 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
         }
       }
 
-      // Regular contact form always goes to Hatun
-      const recipientEmail = to;
+      // Contact form recipient from site-contacts.json
+      const recipientEmail = contactFormRecipientEmail;
 
       console.log('Sending contact form email:', {
         subject: sanitizedSubject,
@@ -265,13 +290,23 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
       });
 
       // Send email notification (using sanitized data and escaped HTML)
+      const devReport = buildHatunDeveloperReportLinks({
+        visitorName: sanitizedName,
+        visitorEmail: sanitizedEmail,
+        visitorSubject: sanitizedSubject,
+        visitorMessage: sanitizedMessage,
+        contactId: contactRef.id,
+        clientIP,
+        newsletterOptIn: sanitizedNewsletter === true
+      });
+
       try {
         const emailResult = await tx.sendMail({
           from: `"DCCI Ministries Website" <${user}>`,
           to: recipientEmail,
           replyTo: `${sanitizedName} <${sanitizedEmail}>`,
           subject: `Contact Form: ${sanitizedSubject}`,
-          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nIP: ${clientIP}\n\n${sanitizedMessage}`,
+          text: `Name: ${sanitizedName}\nEmail: ${sanitizedEmail}\nSubject: ${sanitizedSubject}\nIP: ${clientIP}\n\n${sanitizedMessage}\n\n${devReport.textFooter}`,
           html: `
             <h3>New Contact Form Submission</h3>
             <p><b>Name:</b> ${escapeHtmlForEmail(sanitizedName)}</p>
@@ -284,6 +319,7 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
             <hr>
             <p><small>This email was sent from the DCCI Ministries contact form.</small></p>
             <p><small>Contact ID: ${contactRef.id}</small></p>
+            ${devReport.htmlFooter}
           `
         });
 
@@ -292,6 +328,11 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           to: recipientEmail,
           subject: `Contact Form: ${sanitizedSubject}`
         });
+
+        await contactRef.update({
+          emailDelivered: true,
+          emailDeliveredAt: admin.firestore.FieldValue.serverTimestamp()
+        });
       } catch (emailError: any) {
         console.error('Error sending email:', {
           error: emailError.message,
@@ -299,6 +340,18 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
           to: recipientEmail,
           from: user
         });
+
+        try {
+          await logContactDeliveryFailure(db, {
+            contactId: contactRef.id,
+            recipientEmail,
+            smtpUser: user,
+            error: emailError
+          });
+        } catch (logError) {
+          console.error('Failed to log contact delivery failure:', logError);
+        }
+
         // Still return success to user, but log the error
         // The contact is already stored in Firestore
       }
@@ -310,12 +363,15 @@ export const submitContactForm = functions.https.onRequest((req, res) => {
       });
     } catch (e) {
       console.error('Contact form error:', e);
-      res.status(500).json({ error: "Failed to process contact form" });
+      res.status(500).json({
+        error: 'server_error',
+        message: 'We could not send your message right now. Please try again in a few minutes.',
+      });
     }
   });
 });
 
-// Separate function for website problem reports - always goes to admin@accessiblewebmedia.com
+// Website problem reports → technicalAdminEmail from site-contacts.json
 export const submitWebsiteProblemReport = functions.https.onRequest((req, res) => {
   return cors(req, res, async () => {
     if (req.method !== "POST") { res.status(405).send("Method not allowed"); return; }
@@ -349,19 +405,6 @@ export const submitWebsiteProblemReport = functions.https.onRequest((req, res) =
                     'unknown';
 
     console.log('Website problem report - Client IP detected:', clientIP);
-
-    // IP blocking check - block common VPN/spam IP ranges
-    const blockedRanges = ['111.', '185.', '45.', '91.', '104.'];
-    const isBlockedIP = blockedRanges.some(range => clientIP.startsWith(range));
-
-    if (isBlockedIP) {
-      console.log('Blocked IP detected:', clientIP);
-      res.status(403).json({
-        error: "VPN detected",
-        message: "We've detected that you're using a VPN. To help prevent spam, please turn off your VPN and try again."
-      });
-      return;
-    }
 
     // Honeypot check
     if (website) {
@@ -401,8 +444,7 @@ export const submitWebsiteProblemReport = functions.https.onRequest((req, res) =
       const problemReportRef = await db.collection('websiteProblemReports').add(problemReportData);
       console.log('Website problem report stored with ID:', problemReportRef.id);
 
-      // Always send to admin@accessiblewebmedia.com for website problems
-      const recipientEmail = 'admin@accessiblewebmedia.com';
+      const recipientEmail = technicalAdminEmail;
 
       console.log('Sending website problem report email:', {
         subject: sanitizedSubject,
@@ -459,6 +501,59 @@ export const submitWebsiteProblemReport = functions.https.onRequest((req, res) =
   });
 });
 
+/**
+ * One-time recovery: resend stored Firestore contacts to Hatun.
+ * POST JSON: { secret, after?: "YYYY-MM-DD", since?: "YYYY-MM-DD", dryRun?: true, delete?: false }
+ * Requires functions.config().recovery.secret (set before use).
+ */
+export const recoverContactEmails = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    const expectedSecret =
+      (functions.config().recovery?.secret as string | undefined) || process.env.RECOVERY_SECRET;
+    const provided = (req.body?.secret ?? req.query?.secret) as string | undefined;
+    if (!expectedSecret || provided !== expectedSecret) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    try {
+      const after = parseRecoveryDate(req.body?.after ?? req.query?.after);
+      const since = parseRecoveryDate(req.body?.since ?? req.query?.since);
+      const dryRun = req.body?.dryRun === true || req.query?.dryRun === "true";
+      const deleteAfter = req.body?.delete === true || req.query?.delete === "true";
+
+      if (deleteAfter && dryRun) {
+        res.status(400).json({ error: "delete cannot be used with dryRun" });
+        return;
+      }
+
+      const result = await recoverContacts(db, {
+        after,
+        since: after ? undefined : since,
+        dryRun,
+        deleteAfter,
+        mailUser: user,
+        mailPass: pass,
+        mailTo: contactFormRecipientEmail,
+        smtp: smtpSettings,
+      });
+
+      res.json({ success: true, dryRun, ...result });
+    } catch (err) {
+      console.error("recoverContactEmails failed:", err);
+      res.status(500).json({
+        error: "Recovery failed",
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+});
+
 // Test endpoint to verify function deployment
 export const testContactForm = functions.https.onRequest((req, res) => {
   return cors(req, res, () => {
@@ -468,7 +563,8 @@ export const testContactForm = functions.https.onRequest((req, res) => {
       config: {
         user: user ? "Configured" : "Not configured",
         pass: pass ? "Configured" : "Not configured",
-        to: to ? "Configured" : "Not configured"
+        contactFormRecipientEmail: contactFormRecipientEmail || "Not configured",
+        technicalAdminEmail: technicalAdminEmail || "Not configured",
       }
     });
   });
@@ -495,19 +591,6 @@ export const subscribeToNewsletter = functions.https.onRequest((req, res) => {
                     'unknown';
 
     console.log('Newsletter subscription - Client IP detected:', clientIP);
-
-    // IP blocking check - block common VPN/spam IP ranges
-    const blockedRanges = ['111.', '185.', '45.', '91.', '104.']; // Common VPN/spam ranges
-    const isBlockedIP = blockedRanges.some(range => clientIP.startsWith(range));
-
-    if (isBlockedIP) {
-      console.log('Blocked IP detected for newsletter subscription:', clientIP);
-      res.status(403).json({
-        error: "VPN detected",
-        message: "We've detected that you're using a VPN. To help prevent spam, please turn off your VPN and try again. If you're not using a VPN, please contact us directly."
-      });
-      return;
-    }
 
     // Sanitize and validate input data
     const validation = sanitizeNewsletterForm({ name, email });
@@ -682,9 +765,20 @@ export const getContactStats = functions.https.onRequest((req, res) => {
     try {
       const contactsSnapshot = await db.collection('contacts').get();
       const subscribersSnapshot = await db.collection('subscribers').get();
+      const deliveryFailuresSnapshot = await db.collection('contactDeliveryFailures').get();
 
       const totalContacts = contactsSnapshot.size;
       const totalSubscribers = subscribersSnapshot.size;
+      const undeliveredEmailCount = deliveryFailuresSnapshot.size;
+
+      let latestDeliveryFailureAt: string | null = null;
+      deliveryFailuresSnapshot.docs.forEach((doc) => {
+        const failedAt = doc.data().failedAt;
+        const iso = failedAt?.toDate?.()?.toISOString?.() ?? null;
+        if (iso && (!latestDeliveryFailureAt || iso > latestDeliveryFailureAt)) {
+          latestDeliveryFailureAt = iso;
+        }
+      });
 
       // Count newsletter subscribers from contacts
       const newsletterSubscribers = contactsSnapshot.docs.filter(doc =>
@@ -695,6 +789,8 @@ export const getContactStats = functions.https.onRequest((req, res) => {
         totalContacts,
         totalSubscribers,
         newsletterSubscribers,
+        undeliveredEmailCount,
+        latestDeliveryFailureAt,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -2371,6 +2467,68 @@ export const onArticleUpdate = functions.firestore
     } catch (error) {
       console.error(`Error triggering rebuild for article ${articleId}:`, error);
       // Don't throw - we don't want to retry indefinitely
+      return null;
+    }
+  });
+
+/**
+ * Rebuild Astro SEO pages when welcome page content changes in Firestore.
+ */
+export const onWelcomePageUpdate = functions.firestore
+  .document('siteSettings/welcome')
+  .onWrite(async (change) => {
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.exists ? change.after.data() : null;
+
+    if (!after) {
+      console.log('Welcome page settings deleted. Skipping rebuild.');
+      return null;
+    }
+
+    const contentFields = [
+      'headerTagline',
+      'heroTitle',
+      'heroSubtitle',
+      'logoImageUrl',
+      'heroImageUrl',
+      'missionHeading',
+      'missionContent',
+      'socialHeading',
+      'socialContent',
+      'socialLinks',
+      'supportHeading',
+      'supportContent',
+      'supportLinks',
+      'testimonyStatement',
+      'testimonyVerse',
+      'seoTitle',
+      'seoDescription'
+    ];
+
+    const changed = !before || contentFields.some((field) => before[field] !== after[field]);
+    if (!changed) {
+      console.log('Welcome page updated but content fields unchanged. Skipping rebuild.');
+      return null;
+    }
+
+    console.log('Welcome page content updated. Triggering Astro rebuild...');
+
+    try {
+      const githubToken = functions.config().github?.token;
+      const githubRepo = functions.config().github?.repo;
+      const githubWorkflow = functions.config().github?.workflow || 'rebuild-astro.yml';
+
+      if (githubToken && githubRepo) {
+        console.log(`Triggering GitHub Actions workflow: ${githubRepo}/${githubWorkflow}`);
+        await triggerGitHubActions(githubToken, githubRepo, githubWorkflow, 'welcome');
+        return null;
+      }
+
+      console.log('GitHub Actions not configured. Attempting direct Firebase Hosting deployment...');
+      await triggerFirebaseHostingDeploy('welcome');
+      return null;
+    } catch (error) {
+      console.error('Error triggering rebuild for welcome page:', error);
       return null;
     }
   });

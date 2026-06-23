@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AppCheck } from '@angular/fire/app-check';
+import { getToken } from '@angular/fire/app-check';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -24,15 +26,34 @@ export class ContactService {
   private readonly problemReportApiUrl = environment.firebaseFunctionsUrl + '/submitWebsiteProblemReport';
   private readonly newsletterApiUrl = environment.firebaseFunctionsUrl + '/subscribeToNewsletter';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Optional() private appCheck: AppCheck | null
+  ) {}
+
+  private async buildRequestHeaders(): Promise<HttpHeaders> {
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    if (this.appCheck) {
+      try {
+        const result = await getToken(this.appCheck, false);
+        if (result?.token) {
+          headers = headers.set('X-Firebase-AppCheck', result.token);
+        }
+      } catch (error) {
+        console.warn('App Check token unavailable for contact request:', error);
+      }
+    }
+
+    return headers;
+  }
 
   async submitContactForm(formData: ContactFormData): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.post(this.apiUrl, formData, {
-        headers: new HttpHeaders({
-          'Content-Type': 'application/json'
-        })
-      }));
+      const headers = await this.buildRequestHeaders();
+      const response = await firstValueFrom(this.http.post(this.apiUrl, formData, { headers }));
 
       if (!response) {
         throw new Error('No response from server');
@@ -42,9 +63,8 @@ export class ContactService {
     } catch (error: any) {
       console.error('Error submitting contact form:', error);
 
-      // Re-throw the error with the response body if available
       if (error.error) {
-        throw error; // This will include error.error with the server response
+        throw error;
       }
 
       throw error;
@@ -53,11 +73,8 @@ export class ContactService {
 
   async subscribeToNewsletter(formData: NewsletterSubscriptionData): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.post(this.newsletterApiUrl, formData, {
-        headers: new HttpHeaders({
-          'Content-Type': 'application/json'
-        })
-      }));
+      const headers = await this.buildRequestHeaders();
+      const response = await firstValueFrom(this.http.post(this.newsletterApiUrl, formData, { headers }));
 
       if (!response) {
         throw new Error('No response from server');
@@ -67,23 +84,18 @@ export class ContactService {
     } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);
 
-      // Re-throw the error with the response body if available
       if (error.error) {
-        throw error; // This will include error.error with the server response
+        throw error;
       }
 
       throw error;
     }
   }
 
-  // Submit website problem report (separate from regular contact form)
   async submitWebsiteProblemReport(formData: ContactFormData): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.post(this.problemReportApiUrl, formData, {
-        headers: new HttpHeaders({
-          'Content-Type': 'application/json'
-        })
-      }));
+      const headers = await this.buildRequestHeaders();
+      const response = await firstValueFrom(this.http.post(this.problemReportApiUrl, formData, { headers }));
 
       if (!response) {
         throw new Error('No response from server');
@@ -101,18 +113,8 @@ export class ContactService {
     }
   }
 
-  // Alternative method using Firebase directly if needed
   async submitContactFormDirect(formData: ContactFormData): Promise<void> {
-    // This method can be used if you want to call Firebase Functions directly
-    // without going through the HTTP client
-    try {
-      // You can implement direct Firebase Functions call here if needed
-      // For now, we'll use the HTTP method above
-      return this.submitContactForm(formData);
-    } catch (error) {
-      console.error('Error submitting contact form directly:', error);
-      throw error;
-    }
+    return this.submitContactForm(formData);
   }
 
   async unsubscribeFromNewsletter(email: string, token?: string): Promise<void> {

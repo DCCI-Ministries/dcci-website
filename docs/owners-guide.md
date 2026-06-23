@@ -64,6 +64,7 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 - **Performance**: Website speed is monitored and optimized
 
 ### **What You Can Do Manually**
+- **Edit the Welcome Page**: Dashboard → Welcome Page (hero, mission, testimony, SEO text)
 - **Write Custom Articles**: Use the editor to create special content
 - **Edit Existing Articles**: Update content when needed
 - **Add Media**: Upload images, embed videos, create galleries
@@ -103,6 +104,40 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 3. Paste the URL
 4. The video will automatically embed
 
+### **Editing the Welcome Page**
+1. Log into the admin dashboard
+2. Click **Welcome Page** under Quick Actions
+3. Edit each section (mission, hero text, testimony, etc.)
+4. Click **Save Welcome Page**
+5. Visitors see changes on the welcome page; search engines get an updated page after the automatic rebuild
+
+See **[Content Management — Editing the Welcome Page](./content-management.md#editing-the-welcome-page)** for full details.
+
+### **Contact Form Messages**
+- Visitor messages are emailed **directly to Hatun** (ministry contact form inbox)
+- The website does **not** store message text in the database (only a timestamp for dashboard counts)
+- **Nobody monitors Hatun's inbox** — that would violate visitor privacy. Hatun is the front line for contact mail.
+- Hatun should use **Reply** in her email app to respond to genuine visitors
+- **Do not click unexpected links** in message bodies — treat them like any other email
+- **At the bottom of each contact form email**, Hatun can click **Report suspicious** or **Report solicitation / spam** to email the current website developer (see [Contact Form — Privacy and Reporting](./contact-form-privacy-and-reporting.md))
+- Website **problem reports** (separate form) still go to the technical admin inbox
+
+### **When Hatun Should Report to the Site Manager**
+
+**For a specific suspicious message:** use the links at the bottom of that contact form email (easiest).
+
+**For general issues** (spam volume, form broken, etc.), email the **technical admin address** in `config/site-contacts.json` (`technicalAdminEmail`). Use subject **`Urgent: Hatun Website Question`** when it is urgent.
+
+Hatun cannot expect the developer to see spam or abuse in the admin panel. Report when:
+
+- Spam volume increases noticeably
+- A message looks like phishing, a scam, or a threat
+- A visitor says the contact form will not submit (VPN users may hit rate limits)
+- She clicked something suspicious in a message
+- Anything feels like a security problem
+
+She does **not** need to report every normal message. Full training guide: **[Contact Form — Privacy and Reporting](./contact-form-privacy-and-reporting.md)** (share this with Hatun).
+
 ## 📊 Understanding Your Website
 
 ### **Visitor Statistics**
@@ -121,10 +156,13 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 
 ### **What's Protected**
 - **Your Content**: All articles and media are backed up
-- **Visitor Data**: Personal information is kept secure
+- **Visitor Data**: Contact form message bodies are not stored in Firestore; only submission timestamps for counts
+- **Contact Form**: Server-side spam filters, disposable-email blocking, link limits, and rate limiting — **no Google reCAPTCHA and no VPN blocking**, so visitors in restrictive countries can still reach you (see [Contact Form — Privacy and Reporting](./contact-form-privacy-and-reporting.md))
 - **Website Access**: Only authorized users can make changes
 - **Payment Information**: If you add online giving, it's secure
 
+### **The Privacy Tradeoff (Contact Form)**
+We chose **not** to store full messages in the database (even though that would help fight spam in an admin panel) because a breach or wrong access would expose private correspondence. We also **cannot** have the site manager read Hatun's inbox — that is private ministry mail. The workable model: Hatun reports problems; the developer adjusts server-side filters.
 ### **What You Should Do**
 - **Strong Passwords**: Use unique, strong passwords
 - **Regular Updates**: Keep your login information current
@@ -238,6 +276,6 @@ This guide is written specifically for you - the owner of the DCCI Ministries we
 
 **Remember: This website is designed to work for you, not against you. Most things happen automatically, and when you need help, your developer is here to support you.**
 
-**Last Updated**: [Current Date]  
+**Last Updated**: June 2026  
 **Next Review**: [3 months from now]  
 **Contact**: [Your Developer's Information] 

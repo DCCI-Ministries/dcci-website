@@ -104,6 +104,11 @@ export const routes: Routes = [
     canActivate: [maintenanceGuard, adminOnlyGuard]
   },
   {
+    path: 'admin/welcome-settings',
+    loadComponent: () => import('./admin/welcome-settings/welcome-settings.page').then( m => m.WelcomeSettingsPage),
+    canActivate: [maintenanceGuard, adminOnlyGuard]
+  },
+  {
     path: 'article/:slug',
     loadComponent: () => import('./article/article.page').then( m => m.ArticlePage),
     canActivate: [maintenanceGuard]

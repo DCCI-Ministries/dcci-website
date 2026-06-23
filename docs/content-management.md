@@ -13,11 +13,50 @@ The DCCI Ministries website uses a custom Content Management System (CMS) built 
 
 ### **Manual Content**
 - **Custom Articles**: Written using Quill editor
+- **Welcome Page**: Editable sections via Admin → Welcome Page (see below)
 - **Static Pages**: About, Contact, Legal pages
 - **Media Galleries**: Image and video collections
 - **Blog Posts**: Regular ministry updates
 
-## ✍️ Using the Quill Editor
+## Editing the Welcome Page
+
+Full **Admin** users can edit the public welcome page without changing its look or breaking SEO.
+
+### **How to open the editor**
+1. Log into the admin dashboard
+2. Under **Quick Actions**, click **Welcome Page**
+3. Or go directly to `/admin/welcome-settings`
+
+### **What you can edit**
+| Section | Editor type |
+|---------|-------------|
+| Header tagline | Text field |
+| Logo image | Upload (Firebase Storage) |
+| Hero title & subtitle | Text fields |
+| Hero banner image | Upload (Firebase Storage) |
+| Mission | Heading + Quill body (images supported) |
+| Social media intro | Heading + Quill body |
+| Social links | Add/remove links — each has **button label**, **URL**, and **icon** |
+| Support intro | Heading + Quill body |
+| Support links | Add/remove links — each has **button label**, **URL**, and **icon** |
+| Testimony statement & verse | Text + Quill |
+| SEO title & description | Text fields (for search engines) |
+
+**Not editable in this screen** (built into the page layout): contact form, newsletter signup, content carousel, footer.
+
+### **How it works**
+- **Live site:** Changes appear on `/welcome` immediately after save
+- **Search engines:** Astro rebuilds the static SEO page (`/welcome/` for Google) using the same Firestore content
+- **Defaults:** If nothing has been saved yet, the page shows the original hardcoded text
+
+### **Storage**
+- Firestore document: `siteSettings/welcome`
+- Saves trigger an Astro redeploy (same pipeline as published articles)
+
+### **Read-only mode**
+If the site is in **read-only mode** (Emergency Controls), the Save button is disabled.
+
+---
 
 ### **Editor Interface**
 The Quill editor provides a familiar, Word-like experience with these features:

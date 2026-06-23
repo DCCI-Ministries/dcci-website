@@ -19,7 +19,7 @@
           <h2>CONTENT, THEOLOGICAL, OR MINISTRY INQUIRIES</h2>
           <p>For questions about teachings, articles, videos, theology, or the mission of DCCI Ministries:</p>
           <div class="contact-info-box">
-            <p><strong>Email:</strong> <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+            <p><strong>Email:</strong> <a [href]="'mailto:' + contacts.ministryInfoEmail">{{ contacts.ministryInfoEmail }}</a></p>
           </div>
         </section>
 
@@ -27,7 +27,7 @@
           <h2>WEBSITE, TECHNICAL, OR BUG REPORTS</h2>
           <p>For issues related to the website, accessibility, errors, or technical concerns:</p>
           <div class="contact-info-box">
-            <p><strong>Email:</strong> <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></p>
+            <p><strong>Email:</strong> <a [href]="'mailto:' + contacts.technicalAdminEmail">{{ contacts.technicalAdminEmail }}</a></p>
           </div>
         </section>
 

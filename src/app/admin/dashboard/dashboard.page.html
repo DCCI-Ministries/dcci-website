@@ -111,6 +111,10 @@
               <ion-icon name="people-outline" slot="start"></ion-icon>
               User Management
             </ion-button>
+            <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToWelcomeSettings()" *ngIf="isFullAdmin()">
+              <ion-icon name="home-outline" slot="start"></ion-icon>
+              Welcome Page
+            </ion-button>
             <ion-button expand="block" fill="outline" class="action-btn" (click)="navigateToEmergencyControls()" *ngIf="isFullAdmin()">
               <ion-icon name="settings-outline" slot="start"></ion-icon>
               Site Management
@@ -255,6 +259,9 @@
                   {{ stats.emailService === 'active' ? 'Active' : (stats.emailService === 'checking' ? 'Checking...' : 'Inactive') }}
                 </ion-label>
               </ion-chip>
+              <span *ngIf="stats.undeliveredEmailCount > 0" class="delivery-failure-hint">
+                {{ stats.undeliveredEmailCount }} undelivered (check Firestore → contactDeliveryFailures)
+              </span>
             </div>
             <div class="status-item" [class.warning-text]="stats.storagePercentUsed >= 80">
               <div class="status-indicator" [ngClass]="stats.storagePercentUsed >= 80 ? 'warning' : 'success'"></div>

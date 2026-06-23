@@ -8,7 +8,7 @@
       <div class="privacy-content">
         <div class="organization-info">
           <p><strong>DCCI Ministries</strong></p>
-          <p class="last-updated">Last updated: January 2026</p>
+          <p class="last-updated">Last updated: June 2026</p>
         </div>
 
         <section class="privacy-section">
@@ -20,9 +20,9 @@
             <p><strong>CONTACT INFORMATION</strong></p>
             <ul>
               <li><strong>Privacy, content, or theological inquiries:</strong><br>
-                <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+                <a [href]="'mailto:' + contacts.ministryInfoEmail">{{ contacts.ministryInfoEmail }}</a></li>
               <li><strong>Website, technical, or bug reports:</strong><br>
-                <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+                <a [href]="'mailto:' + contacts.technicalAdminEmail">{{ contacts.technicalAdminEmail }}</a></li>
             </ul>
           </div>
         </section>
@@ -42,8 +42,9 @@
             <ul>
               <li>Name and email address (contact forms, newsletter signup)</li>
               <li>Account information (when user accounts and comments are enabled)</li>
-              <li>Messages you send to us</li>
+              <li>Messages you send through our contact form</li>
             </ul>
+            <p><strong>Contact form messages:</strong> When you use the contact form, your message is emailed to our ministry team. We do <strong>not</strong> store the text of your message in our website database — only a timestamp (and whether you opted into the newsletter) for operational counts.</p>
           </div>
 
           <div class="data-category">
@@ -58,7 +59,20 @@
         </section>
 
         <section class="privacy-section">
-          <h2>4. COOKIES AND EMBEDDED CONTENT</h2>
+          <h2>4. CONTACT FORM, SPAM PROTECTION, AND GLOBAL ACCESS</h2>
+          <p>We want people worldwide to reach us — including visitors in places where internet access is restricted and privacy tools (such as VPNs) are necessary for safety.</p>
+          <p>For that reason we <strong>do not</strong> require Google reCAPTCHA on the contact form, and we <strong>do not</strong> block visitors simply because they use a VPN or similar privacy tools. Those measures can wrongly stop legitimate users, especially in high-surveillance regions.</p>
+          <p>We still protect the form with server-side measures that do not ask you to prove you are human to a third party:</p>
+          <ul>
+            <li>Hidden honeypot fields and timing checks</li>
+            <li>Input sanitization and rate limiting</li>
+            <li>Blocking of known disposable email domains and abusive link patterns</li>
+          </ul>
+          <p>Contact form messages are delivered by email to our ministry inbox. We do not copy full message content into our database, to reduce the risk if systems were ever accessed without authorization.</p>
+        </section>
+
+        <section class="privacy-section">
+          <h2>5. COOKIES AND EMBEDDED CONTENT</h2>
           <p>This website uses cookies for:</p>
           <ul>
             <li>Basic site functionality and security</li>
@@ -70,13 +84,13 @@
         </section>
 
         <section class="privacy-section">
-          <h2>5. THIRD-PARTY SERVICES</h2>
+          <h2>6. THIRD-PARTY SERVICES</h2>
           <p>We use or plan to use the following services:</p>
           <ul>
             <li><strong>Hosting & infrastructure:</strong> Firebase (Google)</li>
             <li><strong>Embedded media:</strong> YouTube (Google)</li>
             <li><strong>Analytics (planned):</strong> Google Analytics / Firebase Analytics</li>
-            <li><strong>Spam protection:</strong> reCAPTCHA, honeypots, rate limiting</li>
+            <li><strong>Spam protection (contact form):</strong> Server-side honeypots, rate limiting, and input validation — <strong>not</strong> Google reCAPTCHA (see section 4)</li>
             <li><strong>Donations (external):</strong>
               <ul>
                 <li>PayPal</li>
@@ -89,7 +103,7 @@
         </section>
 
         <section class="privacy-section">
-          <h2>6. USER ACCOUNTS AND COMMENTS</h2>
+          <h2>7. USER ACCOUNTS AND COMMENTS</h2>
           <p>User accounts and comments are planned features but are not currently available to the general public.</p>
           <p>When comments are enabled:</p>
           <ul>
@@ -101,7 +115,7 @@
         </section>
 
         <section class="privacy-section">
-          <h2>7. HOW WE USE DATA</h2>
+          <h2>8. HOW WE USE DATA</h2>
           <p>We use collected data to:</p>
           <ul>
             <li>Respond to messages and inquiries</li>
@@ -113,17 +127,17 @@
         </section>
 
         <section class="privacy-section">
-          <h2>8. DATA RETENTION</h2>
+          <h2>9. DATA RETENTION</h2>
           <p>We retain personal data only as long as necessary:</p>
           <ul>
-            <li>Contact emails are kept for correspondence records</li>
+            <li>Contact form correspondence is kept in our ministry email accounts (not in the website database as message text)</li>
             <li>Newsletter data is retained until you unsubscribe</li>
             <li>Technical logs are retained for security and troubleshooting</li>
           </ul>
         </section>
 
         <section class="privacy-section">
-          <h2>9. YOUR RIGHTS (UK GDPR / EU GDPR)</h2>
+          <h2>10. YOUR RIGHTS (UK GDPR / EU GDPR)</h2>
           <p>If you are located in the UK or EU, you have the right to:</p>
           <ul>
             <li>Request access to the personal data we hold about you (read-only access)</li>
@@ -132,30 +146,30 @@
 
           <div class="contact-info-box">
             <p><strong>TO MAKE A REQUEST, CONTACT:</strong><br>
-            <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></p>
+            <a [href]="'mailto:' + contacts.ministryInfoEmail">{{ contacts.ministryInfoEmail }}</a></p>
           </div>
         </section>
 
         <section class="privacy-section">
-          <h2>10. CHILDREN'S PRIVACY</h2>
+          <h2>11. CHILDREN'S PRIVACY</h2>
           <p>This website is intended for adults.</p>
           <p>We do not knowingly collect personal data from children under 13.</p>
         </section>
 
         <section class="privacy-section">
-          <h2>11. CHANGES TO THIS POLICY</h2>
+          <h2>12. CHANGES TO THIS POLICY</h2>
           <p>We may update this Privacy Policy as the site grows or new features are added. The "Last updated" date will always reflect the most recent revision.</p>
         </section>
 
         <section class="privacy-section">
-          <h2>12. CONTACT US</h2>
+          <h2>13. CONTACT US</h2>
           <p>For questions about this Privacy Policy or how your data is handled:</p>
           <div class="contact-info-box">
             <ul>
               <li><strong>Theological / content inquiries:</strong><br>
-                <a href="mailto:info@dcciministries.com">info@dcciministries.com</a></li>
+                <a [href]="'mailto:' + contacts.ministryInfoEmail">{{ contacts.ministryInfoEmail }}</a></li>
               <li><strong>Website, technical, or bug reports:</strong><br>
-                <a href="mailto:admin@accessiblewebmedia.com">admin@accessiblewebmedia.com</a></li>
+                <a [href]="'mailto:' + contacts.technicalAdminEmail">{{ contacts.technicalAdminEmail }}</a></li>
             </ul>
           </div>
         </section>

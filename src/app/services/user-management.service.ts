@@ -5,13 +5,17 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService, AdminUser } from './auth';
 import { environment } from '../../environments/environment';
+import { SITE_CONTACTS } from '../config/site-contacts';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserManagementService {
   // Allowed emails for user management access (extra security layer)
-  private readonly ALLOWED_EMAILS = ['admin@accessiblewebmedia.com', 'hatun@dcciministries.com']; // Add Hatun email later
+  private readonly ALLOWED_EMAILS = [
+    SITE_CONTACTS.technicalAdminEmail,
+    SITE_CONTACTS.contactFormRecipientEmail
+  ];
 
   constructor(
     private firestore: Firestore,

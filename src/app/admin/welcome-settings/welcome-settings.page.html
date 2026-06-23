@@ -1,0 +1,288 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Welcome Page</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="welcome-settings-form" *ngIf="!isLoading; else loadingState">
+    <h2>Edit Welcome Page</h2>
+    <p class="subtitle">
+      Update text, images, and sections on the public welcome page. Changes appear on the live site immediately and trigger an SEO rebuild for search engines.
+    </p>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Header &amp; Logo</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Tagline (below ministry name)</ion-label>
+          <ion-input [(ngModel)]="content.headerTagline"></ion-input>
+        </ion-item>
+
+        <ion-label class="field-label">Logo Image</ion-label>
+        <div class="image-upload-block">
+          <div class="image-preview logo-preview" *ngIf="logoPreviewUrl">
+            <img [src]="logoPreviewUrl" alt="Logo preview">
+          </div>
+          <label class="upload-button">
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/bmp,image/tiff,image/avif,image/heic"
+              (change)="onLogoSelected($event)"
+              [disabled]="readOnlyMode || isSaving">
+            <ion-icon name="image-outline"></ion-icon>
+            <span>{{ isUploadingLogo ? 'Uploading...' : 'Upload new logo' }}</span>
+          </label>
+          <ion-button fill="clear" size="small" (click)="resetLogoImage()" [disabled]="readOnlyMode || isSaving">
+            Reset to default logo
+          </ion-button>
+        </div>
+        <p class="field-hint">Square or near-square images work best. Max 5 MB.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Hero Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Hero Title</ion-label>
+          <ion-input [(ngModel)]="content.heroTitle"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Hero Subtitle</ion-label>
+          <ion-input [(ngModel)]="content.heroSubtitle"></ion-input>
+        </ion-item>
+
+        <ion-label class="field-label">Hero Banner Image</ion-label>
+        <div class="image-upload-block">
+          <div class="image-preview hero-preview" *ngIf="heroPreviewUrl">
+            <img [src]="heroPreviewUrl" alt="Hero image preview">
+          </div>
+          <label class="upload-button">
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/bmp,image/tiff,image/avif,image/heic"
+              (change)="onHeroSelected($event)"
+              [disabled]="readOnlyMode || isSaving">
+            <ion-icon name="image-outline"></ion-icon>
+            <span>{{ isUploadingHero ? 'Uploading...' : 'Upload new hero image' }}</span>
+          </label>
+          <ion-button fill="clear" size="small" (click)="resetHeroImage()" [disabled]="readOnlyMode || isSaving">
+            Reset to default hero image
+          </ion-button>
+        </div>
+        <p class="field-hint">Wide banner images work best. Max 5 MB.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Mission Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.missionHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.missionContent"
+            [modules]="quillModules"
+            (onEditorCreated)="onEditorCreated($event)"
+            placeholder="Mission statement..."
+            [styles]="{ height: '220px' }"
+          ></quill-editor>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Social Media Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.socialHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.socialContent"
+            [modules]="quillModules"
+            (onEditorCreated)="onEditorCreated($event)"
+            placeholder="Social section text..."
+            [styles]="{ height: '160px' }"
+          ></quill-editor>
+        </div>
+        <ion-label class="field-label">Social Links</ion-label>
+        <p class="field-hint">Add buttons visitors can click. Each link needs a label and URL. Leave URL blank while drafting — it will not appear on the page.</p>
+
+        <div class="link-editor-list">
+          @for (link of content.socialLinks; track $index; let i = $index) {
+          <div class="link-editor-row">
+            <div class="link-editor-row-header">
+              <span>Link {{ i + 1 }}</span>
+              <ion-button fill="clear" color="danger" size="small" (click)="removeSocialLink(i)" [disabled]="readOnlyMode">
+                <ion-icon name="trash-outline" slot="start"></ion-icon>
+                Remove
+              </ion-button>
+            </div>
+            <ion-item>
+              <ion-label position="stacked">Button label</ion-label>
+              <ion-input [(ngModel)]="link.label" placeholder="YouTube"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">URL</ion-label>
+              <ion-input type="url" [(ngModel)]="link.url" placeholder="https://..."></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Icon</ion-label>
+              <ion-select [(ngModel)]="link.icon" interface="popover" placeholder="Choose icon">
+                @for (icon of linkIconOptions; track icon.value) {
+                <ion-select-option [value]="icon.value">{{ icon.label }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </div>
+          }
+        </div>
+
+        <ion-button fill="outline" size="small" (click)="addSocialLink()" [disabled]="readOnlyMode">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Add social link
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Support Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Section Heading</ion-label>
+          <ion-input [(ngModel)]="content.supportHeading"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Section Content</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.supportContent"
+            [modules]="quillModules"
+            (onEditorCreated)="onEditorCreated($event)"
+            placeholder="Support section text..."
+            [styles]="{ height: '160px' }"
+          ></quill-editor>
+        </div>
+        <ion-label class="field-label">Support Links</ion-label>
+        <p class="field-hint">Add giving or support buttons. Each link needs a label and URL.</p>
+
+        <div class="link-editor-list">
+          @for (link of content.supportLinks; track $index; let i = $index) {
+          <div class="link-editor-row">
+            <div class="link-editor-row-header">
+              <span>Link {{ i + 1 }}</span>
+              <ion-button fill="clear" color="danger" size="small" (click)="removeSupportLink(i)" [disabled]="readOnlyMode">
+                <ion-icon name="trash-outline" slot="start"></ion-icon>
+                Remove
+              </ion-button>
+            </div>
+            <ion-item>
+              <ion-label position="stacked">Button label</ion-label>
+              <ion-input [(ngModel)]="link.label" placeholder="PayPal"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">URL</ion-label>
+              <ion-input type="url" [(ngModel)]="link.url" placeholder="https://..."></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Icon</ion-label>
+              <ion-select [(ngModel)]="link.icon" interface="popover" placeholder="Choose icon">
+                @for (icon of linkIconOptions; track icon.value) {
+                <ion-select-option [value]="icon.value">{{ icon.label }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </div>
+          }
+        </div>
+
+        <ion-button fill="outline" size="small" (click)="addSupportLink()" [disabled]="readOnlyMode">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Add support link
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Testimony Section</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Statement</ion-label>
+          <ion-input [(ngModel)]="content.testimonyStatement"></ion-input>
+        </ion-item>
+        <ion-label class="field-label">Scripture / Verse</ion-label>
+        <div class="quill-editor-wrapper">
+          <quill-editor
+            [(ngModel)]="content.testimonyVerse"
+            [modules]="quillModules"
+            (onEditorCreated)="onEditorCreated($event)"
+            placeholder="Testimony verse..."
+            [styles]="{ height: '140px' }"
+          ></quill-editor>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Search Engine (SEO)</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Page Title</ion-label>
+          <ion-input [(ngModel)]="content.seoTitle"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Meta Description</ion-label>
+          <ion-input [(ngModel)]="content.seoDescription"></ion-input>
+        </ion-item>
+        <p class="field-hint">Used on the SEO-friendly welcome page that search engines index.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="form-actions">
+      <ion-button fill="outline" (click)="cancel()" [disabled]="isSaving">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Cancel
+      </ion-button>
+      <ion-button (click)="save()" [disabled]="isSaving || readOnlyMode">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        <span *ngIf="!isSaving">Save Welcome Page</span>
+        <span *ngIf="isSaving">Saving...</span>
+      </ion-button>
+    </div>
+
+    <div *ngIf="readOnlyMode" class="read-only-notice">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <p>Site is in read-only mode. Save is disabled.</p>
+    </div>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading welcome page content...</p>
+    </div>
+  </ng-template>
+</ion-content>

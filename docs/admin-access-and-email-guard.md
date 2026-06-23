@@ -41,10 +41,13 @@ The allowlist is maintained in code:
 Example:
 
 ```ts
-private readonly ALLOWED_EMAILS = ['admin@accessiblewebmedia.com', 'hatun@dcciministries.com'];
+private readonly ALLOWED_EMAILS = [
+  SITE_CONTACTS.technicalAdminEmail,
+  SITE_CONTACTS.contactFormRecipientEmail
+];
 ```
 
-To allow another admin to access User Management (or other guard-gated features in the future), add their **exact login email** to this array, then build and deploy the app.
+To change the default guarded emails, edit `config/site-contacts.json`, then build and deploy the app. If you need more than those two addresses, update the array in `src/app/services/user-management.service.ts`.
 
 ## Summary for “admin in Firestore but can’t access dashboard / user management”
 

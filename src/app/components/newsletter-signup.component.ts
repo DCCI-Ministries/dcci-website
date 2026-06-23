@@ -50,16 +50,9 @@ export class NewsletterSignupComponent implements OnInit {
         this.submitSuccess = true;
         this.newsletterForm.reset();
       } catch (error: any) {
-        // Check for VPN detection error
-        if (error.error?.error === 'VPN detected') {
-          this.submitError = error.error.message || 'VPN detected. Please turn off your VPN and try again.';
-        }
-        // Check for input validation errors
-        else if (error.error?.error === 'Invalid input' && error.error?.details) {
+        if (error.error?.error === 'Invalid input' && error.error?.details) {
           this.submitError = 'Please check your input: ' + error.error.details.join(', ');
-        }
-        // Check for existing subscriber
-        else if (error.error?.error === 'Already subscribed') {
+        } else if (error.error?.error === 'Already subscribed') {
           this.submitError = error.error.message || 'This email is already subscribed to our newsletter.';
         }
         else {

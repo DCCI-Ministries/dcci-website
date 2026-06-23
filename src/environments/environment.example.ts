@@ -10,6 +10,7 @@ export const environment = {
     appId: "__APP_ID__"
   },
   firebaseFunctionsUrl: "https://__REGION__-__PROJECT__.cloudfunctions.net",
-  contactEmail: "__CONTACT_EMAIL__", // Email address for contact form submissions
+  /** Optional: reCAPTCHA v3 site key for Firebase App Check (invisible bot protection). */
+  appCheckRecaptchaSiteKey: "",
   disqusShortname: "__DISQUS_SHORTNAME__"
 };

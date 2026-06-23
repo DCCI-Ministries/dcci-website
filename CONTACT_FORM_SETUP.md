@@ -1,249 +1,182 @@
 # Contact Form Setup Guide
 
-This guide will help you set up the contact form feature for the DCCI Ministries website.
+This guide covers the DCCI Ministries contact form: email delivery, privacy, security, and deployment.
 
-## What's Been Added
+## Overview
 
-### 1. Contact Form Component
-- **Location:** `src/app/components/contact-form.component.*`
-- **Features:** 
-  - Responsive design with Ionic components
-  - Form validation (required fields, email format, minimum lengths)
-  - Success/error messaging
-  - Accessible design with proper ARIA labels
-  - Dark mode support
-  - **Honeypot protection** against basic bots
+| Item | Detail |
+|------|--------|
+| **Component** | `src/app/components/contact-form.component.*` |
+| **Service** | `src/app/services/contact.service.ts` |
+| **Cloud Function** | `submitContactForm` in `functions/src/index.ts` |
+| **Recipient** | `config/site-contacts.json` → `contactFormRecipientEmail` |
+| **Sender (SMTP)** | Gmail via `mail.user` / `mail.pass` in Firebase config |
+| **Problem reports** | Separate function → `config/site-contacts.json` → `technicalAdminEmail` |
 
-### 2. Contact Service
-- **Location:** `src/app/services/contact.service.ts`
-- **Purpose:** Handles form submission and communicates with Firebase Functions
+## Email flow
 
-### 3. Firebase Functions
-- **Location:** `functions/` directory
-- **Purpose:** Receives form submissions and sends emails to hatun@dcciministries.com
-- **Email Format:** Subject will be "Contact Form: {user_subject}" for easy sorting
+1. Visitor submits the form on `/welcome` or `/contact`
+2. Cloud Function validates and sanitizes input
+3. Email is sent to **Hatun** with `Reply-To` set to the visitor's address
+4. A **metadata-only** record is written to Firestore (`contacts` collection)
+5. Hatun replies using **Reply** in her mail client
 
-### 4. Integration
-- Contact form has been added to the home page above the social media section
-- Form styling matches the existing site theme
+**No admin/monitor inbox shield** — messages go straight to Hatun.
 
-## Setup Steps
+## Design philosophy: privacy, access, and the “bind”
 
-### Step 1: Install Firebase Functions Dependencies
-```bash
-cd functions
-npm install
+The contact form balances three goals:
+
+1. **Global access** — Visitors in restrictive countries may need VPNs or strict privacy tools; we do not block them for that.
+2. **Direct ministry contact** — Mail goes to Hatun; the site manager does not read her inbox.
+3. **Minimal data retention** — Full message text is **not** stored in Firestore (only timestamps for counts). Storing messages in the database would help spam review but creates a privacy risk if the database is ever accessed wrongly.
+
+**Hatun is the front line.** She reports spam, abuse, or form failures to the site manager. See **[Contact Form — Privacy and Reporting](./docs/contact-form-privacy-and-reporting.md)** for her training guide.
+
+### Why we do not use Google reCAPTCHA (default)
+
+reCAPTCHA and Firebase App Check (reCAPTCHA v3) can block or frustrate legitimate users — VPN users, privacy browsers, regions where Google is restricted, and people with accessibility needs. That conflicts with reaching Christians under surveillance. We use **server-side** protections instead (honeypot, timing, rate limits, disposable-email blocking, link rules). App Check remains **optional and off** unless spam justifies the tradeoff.
+
+### Why we do not block VPN IP addresses
+
+Blanket VPN blocking was removed in June 2026. It rejected many legitimate visitors who use VPNs for safety. See deprecated [IP_BLOCKING_SETUP.md](./IP_BLOCKING_SETUP.md).
+
+## Firestore logging (privacy)
+
+Message content is **not** stored. Each successful submission creates:
+
+```json
+{
+  "submittedAt": "<timestamp>",
+  "newsletterOptIn": true | false
+}
 ```
 
-### Step 2: Configure Email Credentials
-You need to set up Gmail credentials for sending emails. **Important:** Use an App Password, not your regular password.
+- **Dashboard → Messages** counts documents in `contacts`
+- **Recent Activity** shows “Contact form submission received” (no names or message text)
+- **Newsletter opt-ins** from the contact form still save to `subscribers` when checked
 
-#### Generate Gmail App Password:
-1. Go to [Google Account Settings](https://myaccount.google.com/)
-2. Enable 2-Factor Authentication if not already enabled
-3. Go to Security → App Passwords
-4. Generate a new app password for "Mail"
-5. Copy the generated password
+Rate-limit metadata (no message content) uses:
+- `contactRateLimits` — per-IP cooldown
+- `contactEmailRateLimits` — per-email daily cap
 
-#### Set Firebase Config:
+## Setup
+
+### 1. Install dependencies
+
 ```bash
-# Set sender email credentials (Gmail / Google Workspace)
-firebase functions:config:set mail.user="your-email@gmail.com"
+cd functions && npm install
+```
+
+### 2. Configure Gmail SMTP
+
+Generate a [Google App Password](https://myaccount.google.com/) (requires 2FA), then:
+
+```bash
+firebase functions:config:set mail.user="your-sender@gmail.com"
 firebase functions:config:set mail.pass="your-app-password"
-
-# Set recipient email — who receives contact form submissions (see "Email Routing" below)
-firebase functions:config:set mail.to="admin@accessiblewebmedia.com"
 ```
 
-**Note:** The code reads `mail.user`, `mail.pass`, and `mail.to` from Firebase config (see `functions/src/index.ts`). There is no `contact.email` — use `mail.to` for the recipient.
+Only `mail.user` and `mail.pass` are required. There is no `mail.to` for the contact form.
 
-### Step 3: Build and Deploy Functions
+### 3. Deploy
+
 ```bash
-# From project root
 npm run deploy:functions
+firebase deploy --only firestore:rules   # if rules changed
 ```
 
-Or manually:
-```bash
-cd functions
-npm run build
-cd ..
-firebase deploy --only functions
-```
+### 4. Environment files
 
-### Step 4: Update Environment Configuration
-Update your environment files with the Firebase Functions URL:
+Ensure `firebaseFunctionsUrl` is set in `src/environments/environment*.ts`.
+
+Optional App Check (see Security section):
 
 ```typescript
-// src/environments/environment.ts
-export const environment = {
-  // ... existing config
-  firebaseFunctionsUrl: "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net"
-};
+appCheckRecaptchaSiteKey: "your-recaptcha-v3-site-key",
 ```
 
-Replace `YOUR_PROJECT_ID` with your actual Firebase project ID and `us-central1` with your preferred region.
+## Email format Hatun receives
 
-## Testing the Contact Form
+- **To:** `config/site-contacts.json` → `contactFormRecipientEmail`
+- **From:** `DCCI Ministries Website <mail.user>`
+- **Reply-To:** Visitor's name and email
+- **Subject:** `Contact Form: {visitor subject}`
+- **Body:** Name, email, subject, and message (plain + HTML-escaped)
+- **Footer for Hatun:** Two mailto links to the current `technicalAdminEmail` — report suspicious or solicitation/spam (pre-filled subject `Urgent: Hatun Website Question — …`). Implemented in `functions/src/contact-dev-report.ts`.
 
-### 1. Local Testing
+IP addresses are **not** included in the email body.
+
+## Security features
+
+Designed to block abuse while allowing legitimate visitors (including VPN users).
+
+| Layer | Description |
+|-------|-------------|
+| **Honeypot** | Hidden `website` field; bots are silently rejected |
+| **Timing** | Form must be open ≥ 8 seconds before submit |
+| **Sanitization** | HTML stripped; scripts/`javascript:` patterns blocked |
+| **Email escape** | HTML entities escaped in outbound email |
+| **Spam keywords** | Common SEO/crypto/promo phrases rejected |
+| **Disposable emails** | Throwaway domains (Mailinator, Guerrilla Mail, etc.) blocked |
+| **Link limits** | Max 3 links; URL shorteners (bit.ly, tinyurl, …) blocked |
+| **Rate limits** | 5 min per IP + 3 submissions per email per 24 h (after successful send) |
+| **App Check** | Optional invisible reCAPTCHA v3 — **off by default** (see Design philosophy above) |
+
+**Removed (2026-06-21):** Blanket VPN IP range blocking — it blocked legitimate users in privacy-sensitive regions.
+
+### Enable Firebase App Check (optional — not recommended unless spam is severe)
+
+App Check uses Google reCAPTCHA v3 and can block some real visitors. Only enable after ministry agreement that the spam problem outweighs access risk.
+
+1. [Google reCAPTCHA admin](https://www.google.com/recaptcha/admin) — create a **v3** key for your domain
+2. Firebase Console → **App Check** → register web app with reCAPTCHA v3
+3. Add site key to `src/environments/environment.prod.ts`:
+   ```typescript
+   appCheckRecaptchaSiteKey: "your-recaptcha-v3-site-key",
+   ```
+4. Deploy the Angular app; test contact form submissions
+5. Enforce on the server:
+   ```bash
+   firebase functions:config:set security.enforce_app_check="true"
+   firebase deploy --only functions
+   ```
+6. Until step 5, the API accepts requests without App Check (dev-friendly).
+
+## Testing
+
 ```bash
-# Start the development server
-npm start
-
-# In another terminal, test the Firebase Function locally
-cd functions
-npm run serve
+npm start                    # Angular app
+cd functions && npm run serve  # optional local functions
 ```
 
-### 2. Test the Form
-1. Navigate to the home page
-2. Fill out the contact form
-3. Submit the form
-4. Check that you receive an email at hatun@dcciministries.com
-
-### 3. Test the Firebase Function
-Visit: `https://[region]-[project-id].cloudfunctions.net/testContactForm`
-
-## Email Configuration
-
-### Recipient Email Addresses
-The contact form sends all submissions to a **single** recipient configured in Firebase:
-
-- **Config key:** `mail.to` (set via `firebase functions:config:set mail.to="..."`)
-- There is no per-environment recipient in code — you control it by what you set in Firebase config for each project/environment.
-
-Typical choices:
-
-- **Development/Staging**: e.g. `admin@accessiblewebmedia.com` (your own inbox for testing)
-- **Production**: Either the real recipient (e.g. `hatun@dcciministries.com`) or, for the “shield” setup below, the monitor’s inbox
-
-### Email Routing: Shield / Monitor Setup
-
-Contact form emails are sent by **Firebase Cloud Functions** using **Gmail SMTP** (nodemailer). The recipient is whatever you set in `mail.to`. Routing happens entirely in Firebase + Gmail; Cloudflare (if used) is in front of the website only, not in the email path.
-
-**Current design (shield for the real recipient):**  
-Emails are routed to an **admin/monitor inbox** (e.g. `admin@accessiblewebmedia.com`) instead of the real recipient’s personal address. That way:
-
-- The monitor can review submissions for spam/scams before anything reaches the real recipient.
-- The real recipient’s email stays private and is not exposed on the public form or in logs.
-
-This is often combined with **Google Workspace** for the monitor inbox (labels, filters, forwarding rules, etc.). The actual “where it goes” is still controlled by `mail.to` in Firebase config.
-
-**Options for future developers:**
-
-1. **Remove the shield** — Send straight to the real recipient: set `mail.to` to their address (e.g. `hatun@dcciministries.com`), redeploy functions, and optionally remove or simplify any forwarding rules in Google Workspace.
-2. **Keep monitoring, different monitor** — Route to your own email: set `mail.to` to your inbox, redeploy, and use your own filters/forwarding.
-3. **Change in code** — To support multiple recipients, env-specific recipients, or more complex logic, edit `functions/src/index.ts` (the `submitContactForm` handler). The recipient is currently `const to = functions.config().mail.to`; you can replace or extend that with your own logic and redeploy.
-
-### Email Format
-When someone submits the contact form, the configured recipient will receive an email with:
-
-- **From:** Your configured Gmail address
-- **To:** Environment-specific email address
-- **Subject:** "Contact Form: {user_subject}"
-- **Body:** 
-  ```
-  New contact form submission from DCCI Ministries website:
-  
-  Name: [User's Name]
-  Email: [User's Email]
-  Subject: [User's Subject]
-  
-  Message:
-  [User's Message]
-  
-  ---
-  This email was sent from the DCCI Ministries contact form.
-  Submitted on: [Timestamp]
-  ```
-
-## Security Features
-
-- **Input Validation:** All fields are validated on both client and server
-- **Email Validation:** Proper email format validation
-- **Honeypot Protection:** Hidden field to catch basic bots
-- **CORS Protection:** Configured for web requests
-- **Rate Limiting:** Firebase Functions built-in protection + IP logging
-- **Security Headers:** XSS protection, frame options, content type options
-- **Secure Credentials:** Stored in Firebase Config, not in code
+1. Open `/welcome` or `/contact`
+2. Fill the form (wait at least 8 seconds)
+3. Submit — check Hatun's inbox
+4. Test endpoint: `https://[region]-[project].cloudfunctions.net/testContactForm`
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **"Failed to send message" error**
-   - Check Firebase Functions logs: `firebase functions:log`
-   - Verify email credentials are set correctly
-   - Ensure Gmail App Password is valid
-
-2. **CORS errors**
-   - Make sure functions are deployed: `firebase deploy --only functions`
-   - Check the function URL in your environment config
-
-3. **Form not submitting**
-   - Check browser console for errors
-   - Verify the contact service is properly injected
-   - Check network tab for failed requests
-
-### Debugging Steps
-
-1. **Check Firebase Functions Logs:**
-   ```bash
-   firebase functions:log
-   ```
-
-2. **Test Function Locally:**
-   ```bash
-   cd functions
-   npm run serve
-   ```
-
-3. **Verify Environment Config:**
-   - Check `firebaseFunctionsUrl` in environment files
-   - Ensure the URL matches your deployed function
+| Issue | Check |
+|-------|--------|
+| Failed to send | `firebase functions:log` — verify `mail.user` / `mail.pass`; check Firestore **`contactDeliveryFailures`** (admin dashboard shows count) |
+| Disposable email error | Use a normal Gmail/Outlook/etc. address |
+| Too many links | Max 3; no shorteners — use full URLs |
+| Please wait… | IP cooldown (5 min) or email limit (3/day) |
+| Forbidden / verify request | App Check enforced but key missing — configure or disable enforce |
+| CORS errors | Redeploy functions; verify `firebaseFunctionsUrl` |
 
 ## Customization
 
-### Styling
-- Modify `src/app/components/contact-form.component.scss`
-- Uses CSS custom properties for theming
-- Responsive design with mobile-first approach
+- **Styling:** `src/app/components/contact-form.component.scss`
+- **Validation rules:** `functions/src/sanitization.ts`, `functions/src/contact-security.ts`
+- **Recipient email:** `config/site-contacts.json` → `contactFormRecipientEmail` (sync `functions/src/config/site-contacts.json`)
+- **Email template:** `submitContactForm` handler in `functions/src/index.ts`
 
-### Form Fields
-- Add/remove fields in `contact-form.component.ts`
-- Update validation rules as needed
-- Modify the Firebase Function to handle new fields
+## Related documentation
 
-### Email Template
-- Customize email format in `functions/src/index.ts`
-- Modify the `emailBody` template
-- Add additional email recipients if needed
-
-## Deployment
-
-The contact form is automatically included when you deploy the main application:
-
-```bash
-# Deploy everything
-npm run deploy:production
-
-# Or deploy just the functions
-npm run deploy:functions
-```
-
-## Support
-
-If you encounter issues:
-1. Check the Firebase Functions logs
-2. Verify all environment variables are set
-3. Test the function locally first
-4. Check the browser console for client-side errors
-
-## Notes
-
-- The form automatically resets after successful submission
-- All submissions are logged to Firebase Functions logs
-- The email subject format helps Hatun sort contact form emails
-- The form is fully accessible and follows WCAG guidelines
-- Dark mode support is included for better user experience 
+- **[Technical Contact Handoff](./docs/technical-contact-handoff.md)** — replace website/technical email on developer handoff (UK/EU)
+- **[Contact Form — Privacy and Reporting](./docs/contact-form-privacy-and-reporting.md)** — why no reCAPTCHA/VPN blocking; Hatun reporting guide
+- **[Content Management — Editing the Welcome Page](./docs/content-management.md#editing-the-welcome-page)**
+- **[Owner's Guide — Contact messages](./docs/owners-guide.md)**
+- **[Dev Log — 2026-06-21](./docs/dev-log.md)**

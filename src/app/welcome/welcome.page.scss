@@ -135,6 +135,7 @@
 .brand-logo {
   width: 120px;
   height: 120px;
+  object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   flex-shrink: 0;
   transition: width 0.3s ease, height 0.3s ease;
@@ -220,10 +221,10 @@
 
 .hero-image {
   width: 100%;
-  height: 300px;
-  object-fit: cover;
-  object-position: center;
+  height: auto;
   display: block;
+  object-fit: contain;
+  object-position: center;
 }
 
 /* Mission Section */
@@ -259,15 +260,42 @@
   text-align: center;
 }
 
-.mission-card p {
+.welcome-rich-content {
+  :where(p, li) {
+    font-size: inherit;
+    color: inherit;
+    line-height: inherit;
+  }
+
+  p {
+    margin: 0 0 1.5rem 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 8px;
+  }
+}
+
+.mission-body {
   font-size: 1.6rem;
   color: var(--ion-color-dark-shade);
   line-height: 1.6;
-  margin: 0 0 1.5rem 0;
+}
 
-  &:last-child {
-    margin-bottom: 0;
-  }
+.social-body,
+.support-body {
+  font-size: 1.4rem;
+  color: var(--ion-color-dark-shade);
+  line-height: 1.6;
+  margin-bottom: 2rem;
 }
 
 /* Features Section */
@@ -653,9 +681,6 @@
     font-size: 1.4rem;
   }
 
-  .hero-image {
-    height: 200px;
-  }
 
   .mission-card,
   .social-card,
@@ -751,9 +776,6 @@
     font-size: 1.2rem;
   }
 
-  .hero-image {
-    height: 150px;
-  }
 
   .mission-card,
   .social-card,

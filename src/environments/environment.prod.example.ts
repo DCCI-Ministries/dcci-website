@@ -8,5 +8,6 @@ export const environment = {
     messagingSenderId: "__SENDER_ID__",
     appId: "__APP_ID__"
   },
+  appCheckRecaptchaSiteKey: "",
   disqusShortname: "__DISQUS_SHORTNAME__"
 };
