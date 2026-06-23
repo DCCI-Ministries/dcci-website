@@ -13,6 +13,6 @@
     "firebase-admin": "^13.0.0"
   },
   "devDependencies": {
-    "astro": "^5.16.9"
+    "astro": "^6.4.6"
   }
 }
